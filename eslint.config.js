@@ -6,6 +6,10 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist']),
+    expoConfig,
+    {
+        ignores: ['dist/*'],
+    },
   {
     files: ['**/*.{js,jsx}'],
     extends: [
