@@ -111,7 +111,7 @@ function App() {
             </div>
 
             <div className="content">
-                {activePage === 'dashboard' && <DashboardPage />}
+                {activePage === 'dashboard' && <DashboardPage onNavigateTo={showPage} />}
                 {activePage === 'quests' && <QuestsPage />}
                 {activePage === 'plateau' && <BoardPage />}
                 {activePage === 'competition' && <CompetitionPage />}

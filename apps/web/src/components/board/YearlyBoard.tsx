@@ -7,6 +7,7 @@ type DayStatus = 'completed' | 'partial' | 'missed' | 'future' | 'none';
 
 interface DayData {
     date: string;
+    dayNumber: number;
     status: DayStatus;
     validations: number;
     totalQuests: number;
@@ -101,6 +102,7 @@ export function YearlyBoard() {
 
                 week.push({
                     date: dateStr,
+                    dayNumber: currentDate.getDate(),
                     status,
                     validations: validationsByDate[dateStr] || 0,
                     totalQuests: totalRef,
@@ -141,7 +143,7 @@ export function YearlyBoard() {
         );
     }
 
-    const CELL_SIZE = 13;
+    const CELL_SIZE = 22;
     const CELL_GAP = 3;
     const DAY_LABELS = ['Lun', '', 'Mer', '', 'Ven', '', 'Dim'];
 
@@ -217,11 +219,22 @@ export function YearlyBoard() {
                                 style={{
                                     width: `${CELL_SIZE}px`,
                                     height: `${CELL_SIZE}px`,
-                                    borderRadius: '2px',
+                                    borderRadius: '3px',
                                     backgroundColor: getCellColor(day.status),
                                     border: getCellBorder(day.date, today),
                                     cursor: day.status !== 'future' && day.status !== 'none' ? 'pointer' : 'default',
                                     position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '8px',
+                                    fontWeight: 700,
+                                    color: day.status === 'future' || day.status === 'none'
+                                        ? '#BBBBBB'
+                                        : day.date === today
+                                            ? '#9B7DC8'
+                                            : '#555555',
+                                    userSelect: 'none',
                                 }}
                                 onMouseEnter={(e) => {
                                     if (day.status === 'future') return;
@@ -229,7 +242,9 @@ export function YearlyBoard() {
                                     setTooltip({ x: rect.left, y: rect.top, day });
                                 }}
                                 onMouseLeave={() => setTooltip(null)}
-                            />
+                            >
+                                {day.dayNumber}
+                            </div>
                         ))}
                     </div>
                 ))}
@@ -268,7 +283,7 @@ export function YearlyBoard() {
                 <div
                     style={{
                         position: 'fixed',
-                        left: `${tooltip.x + 18}px`,
+                        left: `${tooltip.x + 26}px`,
                         top: `${tooltip.y - 8}px`,
                         backgroundColor: '#1A1A1A',
                         color: 'white',
