@@ -7,9 +7,18 @@ interface CreateCategoryModalProps {
 }
 
 const PRESET_CATEGORY_EMOJIS = [
-    '💪', '🏃', '🧘', '🎯', '📚', '✍️', '💻', '🎨',
-    '🍎', '💰', '👨‍👩‍👧', '🏠', '🚗', '✈️', '🎮', '📱',
-    '🌟', '💼', '🎓', '❤️', '🧠', '🎵', '🌿', '⚡',
+    // Bien-être & sport
+    '💪', '🏃', '🧘', '🎯', '🏆', '❤️', '🔥', '⚡',
+    // Travail & apprentissage
+    '📚', '✍️', '💻', '🎨', '🎓', '💼', '🧠', '📊',
+    // Famille & social
+    '👨‍👩‍👧', '🤝', '🌟', '🎉', '🎁', '👫', '🏠', '🌍',
+    // Alimentation & nature
+    '🍎', '🌿', '🥗', '💧', '🌱', '🌈', '☀️', '🌙',
+    // Loisirs & voyages
+    '🎮', '📱', '🚗', '✈️', '🎵', '🎭', '📷', '🎸',
+    // Finance & organisation
+    '💰', '🧩', '📝', '🔑', '🛡️', '💡', '⚙️', '📅',
 ];
 
 export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
@@ -17,7 +26,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
 
     const [formData, setFormData] = useState({
         name: '',
-        svg_icon: '',
+        svg_icon: PRESET_CATEGORY_EMOJIS[0], // Pré-sélectionner le premier emoji
         color: '#C8B7E8',
     });
 
@@ -40,7 +49,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             // Reset form and close modal
             setFormData({
                 name: '',
-                svg_icon: '',
+                svg_icon: PRESET_CATEGORY_EMOJIS[0],
                 color: '#C8B7E8',
             });
             onClose();

@@ -7,7 +7,8 @@ import {
     useDailyMoodHistory,
     usePositiveThingsHistory,
     useQuests,
-    useCategories
+    useCategories,
+    useFrequencies,
 }  from '@core/hooks/useApi';
 import {useAuth} from '@core/contexts/AuthContext';
 import {ConfirmValidationModal} from '../quests/ConfirmValidationModal';
@@ -16,6 +17,7 @@ import toast from 'react-hot-toast';
 interface DailyQuestsProps {
     quests?: Quest[];
     isLoading?: boolean;
+    onNavigateToQuests?: () => void;
 }
 
 type Mood = 'amazing' | 'good' | 'okay' | 'bad' | 'terrible' | null;
@@ -37,10 +39,11 @@ const valueToMood: Record<number, NonNullable<Mood>> = {
     1: 'terrible',
 };
 
-export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
+export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQuestsProps) {
     const { user, updateUser } = useAuth();
     const quests = useQuests().data;
     const { data: categories } = useCategories();
+    const { data: frequencies } = useFrequencies();
     const today = new Date().toISOString().split('T')[0];
     // Hooks for validations
     const createValidation = useCreateValidation();
@@ -54,8 +57,8 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
     const [selectedMood, setSelectedMood] = useState<Mood>(null);
     const [positiveThings, setPositiveThings] = useState(['', '', '']);
     const [isPositiveThingsEditable, setIsPositiveThingsEditable] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
     const [confirmationModal, setConfirmationModal] = useState<{ isOpen: boolean; questId: string | null; points: number }>({
         isOpen: false,
         questId: null,
@@ -70,11 +73,11 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
             // Ne pas afficher les quêtes archivées
             if (!quest.is_active) return false;
 
-            // Filter by category
-            if (selectedCategory !== 'all' && quest.category_id !== selectedCategory) return false;
+            // Filter by category name
+            if (selectedCategory !== null && quest.category_name !== selectedCategory) return false;
 
             // Filter by frequency
-            if (selectedFrequency !== 'all' && quest.frequency !== selectedFrequency) return false;
+            if (selectedFrequency !== null && quest.frequency !== selectedFrequency) return false;
 
             return true;
         });
@@ -377,42 +380,80 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                     <h3 style={{ margin: 0 }}>Mes quêtes</h3>
                 </div>
 
-                {/* Filters */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
+                {/* Category Filter */}
+                <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#6B6B6B', fontWeight: 600 }}>Filtrer par catégorie</h4>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={() => setSelectedCategory(null)}
                         style={{
-                            padding: '8px 12px',
+                            padding: '6px 14px',
                             borderRadius: '8px',
-                            border: '2px solid #E5E5E5',
-                            fontSize: '14px',
+                            border: 'none',
+                            backgroundColor: selectedCategory === null ? '#C8B7E8' : '#F0F0F0',
+                            color: '#1A1A1A',
+                            fontWeight: 600,
                             cursor: 'pointer',
+                            fontSize: '13px',
                         }}
                     >
-                        <option value="all">Toutes catégories</option>
-                        {categories?.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={selectedFrequency}
-                        onChange={(e) => setSelectedFrequency(e.target.value)}
+                        Tous
+                    </button>
+                    {categories?.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.name)}
+                            style={{
+                                padding: '6px 14px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                backgroundColor: selectedCategory === cat.name ? '#C8B7E8' : '#F0F0F0',
+                                color: '#1A1A1A',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                            }}
+                        >
+                            {cat.svg_icon} {cat.name}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Frequency Filter */}
+                <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#6B6B6B', fontWeight: 600 }}>Filtrer par fréquence</h4>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={() => setSelectedFrequency(null)}
                         style={{
-                            padding: '8px 12px',
+                            padding: '6px 14px',
                             borderRadius: '8px',
-                            border: '2px solid #E5E5E5',
-                            fontSize: '14px',
+                            border: 'none',
+                            backgroundColor: selectedFrequency === null ? '#C8B7E8' : '#F0F0F0',
+                            color: '#1A1A1A',
+                            fontWeight: 600,
                             cursor: 'pointer',
+                            fontSize: '13px',
                         }}
                     >
-                        <option value="all">Toutes fréquences</option>
-                        <option value="Journalier">Journalier</option>
-                        <option value="Hebdomadaire">Hebdomadaire</option>
-                        <option value="Mensuel">Mensuel</option>
-                        <option value="Trimestriel">Trimestriel</option>
-                        <option value="Annuel">Annuel</option>
-                    </select>
+                        Tous
+                    </button>
+                    {frequencies?.map(freq => (
+                        <button
+                            key={freq.id}
+                            onClick={() => setSelectedFrequency(freq.name)}
+                            style={{
+                                padding: '6px 14px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                backgroundColor: selectedFrequency === freq.name ? '#C8B7E8' : '#F0F0F0',
+                                color: '#1A1A1A',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                            }}
+                        >
+                            {freq.name}
+                        </button>
+                    ))}
                 </div>
 
                 <div>
@@ -480,7 +521,7 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 <button
                                                     className="btn btn-secondary"
-                                                    onClick={() => window.location.hash = 'quests'}
+                                                    onClick={() => onNavigateToQuests?.()}
                                                     style={{
                                                         padding: '8px 16px',
                                                         borderRadius: '8px',

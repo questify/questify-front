@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useYearlyBoardData } from '@core/hooks/useApi';
 import { useAuth } from '@core/contexts/AuthContext';
+import { YearlyBoard } from './YearlyBoard';
 
 interface DayCell {
     date: string;
@@ -241,7 +242,7 @@ export function BoardPage() {
             backgroundColor: '#FAFAFA'
         }}>
             <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-                <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>Le Tableau Hebdomadaire 📅</h1>
+                <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>Le Plateau 📅</h1>
                 <p style={{ color: '#6B6B6B', marginBottom: '40px' }}>
                     Visualise ta progression jour par jour
                 </p>
@@ -420,6 +421,12 @@ export function BoardPage() {
                         <h3>{stats.moodDays}/{stats.totalDays}</h3>
                         <p style={{ color: '#6B6B6B' }}>Humeurs enregistrées 😊</p>
                     </div>
+                </div>
+
+                {/* Yearly Board */}
+                <div className="card" style={{ marginBottom: '30px' }}>
+                    <h3 style={{ marginBottom: '16px' }}>Vue annuelle 📊</h3>
+                    <YearlyBoard />
                 </div>
 
                 {/* Legend */}

@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {useAuth} from '@core/contexts/AuthContext';
 import {useDailyMoodHistory, usePositiveThingsHistory, useValidationsHistory} from '@core/hooks/useApi';
-import { YearlyBoard } from '../board/YearlyBoard';
 
 interface StatisticsTabProps {
     dailyLoading: boolean;
@@ -79,7 +78,7 @@ export function StatisticsTab({
         }
     }, [moodHistory, positiveThingsHistory, validationsHistory, daysToFetch, today]);
     // Merge and sort history items chronologically, filtering for today or yesterday
-    const { sortedHistory, displayDate } = useMemo(() => {
+    const { sortedHistory, displayDate, isShowingYesterday } = useMemo(() => {
         const items: HistoryItem[] = [];
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -120,11 +119,12 @@ export function StatisticsTab({
         const todayItems = items.filter(item => item.date.startsWith(today));
         const yesterdayItems = items.filter(item => item.date.startsWith(yesterdayStr));
         // Use today's data if available, otherwise yesterday's
-        const filteredItems = todayItems.length > 0 ? todayItems : yesterdayItems;
-        const dateToDisplay = todayItems.length > 0 ?  today : yesterdayStr;
+        const isShowingYesterday = todayItems.length === 0;
+        const filteredItems = !isShowingYesterday ? todayItems : yesterdayItems;
+        const dateToDisplay = !isShowingYesterday ? today : yesterdayStr;
 
         // Format the display date
-        const displayDate = new Date(dateToDisplay).toLocaleDateString('fr-FR', {
+        const displayDate = new Date(dateToDisplay + 'T12:00:00').toLocaleDateString('fr-FR', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -134,7 +134,8 @@ export function StatisticsTab({
         // Sort by date descending (most recent first)
         return {
             sortedHistory: filteredItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
-            displayDate
+            displayDate,
+            isShowingYesterday,
         };
     }, [moodHistory, positiveThingsHistory, validationsHistory, validationsError, today]);
 
@@ -249,12 +250,6 @@ export function StatisticsTab({
                 )}
             </div>
 
-            {/* Yearly Board Section */}
-            <div className="card" style={{ marginTop: '20px' }}>
-                <h3 style={{ marginBottom: '16px' }}>Tableau annuel 📅</h3>
-                <YearlyBoard />
-            </div>
-
             {/* History Section */}
             <div className="card" style={{ marginTop: '20px' }}>
                 <div
@@ -267,7 +262,9 @@ export function StatisticsTab({
                     }}
                     onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
                 >
-                    <h3 style={{ margin: 0 }}>Historique du jour - {displayDate}</h3>
+                    <h3 style={{ margin: 0 }}>
+                        {isShowingYesterday ? `Historique - ${displayDate}` : `Historique du jour - ${displayDate}`}
+                    </h3>
                     <span style={{ fontSize: '20px', transition: 'transform 0.3s', transform: isHistoryExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                         ▼
                     </span>

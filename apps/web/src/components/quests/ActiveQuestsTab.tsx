@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Quest, Category, Frequency } from '@core/types/api';
+import { EditQuestModal } from './EditQuestModal';
 
 interface ActiveQuestsTabProps {
     quests: Quest[];
@@ -24,6 +25,7 @@ export function ActiveQuestsTab({
 }: ActiveQuestsTabProps) {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
+    const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
 
     // Filter quests based on category and frequency
     const filteredQuests = quests?.filter((quest) => {
@@ -55,7 +57,7 @@ export function ActiveQuestsTab({
                 {categories?.map((category) => (
                     <button
                         key={category.id}
-                        className={selectedCategory === category.id ? 'btn btn-primary' : 'btn'}
+                        className={selectedCategory === category.name ? 'btn btn-primary' : 'btn'}
                         onClick={() => setSelectedCategory(category.name)}
                         style={{
                             padding: '8px 16px',
@@ -166,6 +168,20 @@ export function ActiveQuestsTab({
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
+                                                onClick={() => setEditingQuest(quest)}
+                                                style={{
+                                                    padding: '12px 24px',
+                                                    borderRadius: '8px',
+                                                    border: 'none',
+                                                    backgroundColor: '#F0F0F0',
+                                                    color: '#1A1A1A',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                ✏️ Modifier
+                                            </button>
+                                            <button
                                                 className="btn btn-primary objective-validate"
                                                 onClick={() => onOpenConfirmationModal(quest.id, quest.points)}
                                                 disabled={isValidating}
@@ -206,6 +222,13 @@ export function ActiveQuestsTab({
                     ))
                 )}
             </div>
+
+            {/* Edit Quest Modal */}
+            <EditQuestModal
+                quest={editingQuest}
+                isOpen={editingQuest !== null}
+                onClose={() => setEditingQuest(null)}
+            />
         </>
     );
 }

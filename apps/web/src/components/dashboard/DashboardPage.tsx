@@ -4,7 +4,11 @@ import {useWeeklyOverview, useDailyOverview} from '@core/hooks/useApi';
 import {DailyQuests} from './DailyQuests';
 import {StatisticsTab} from './StatisticsTab';
 
-export function DashboardPage() {
+interface DashboardPageProps {
+    onNavigateTo?: (page: string) => void;
+}
+
+export function DashboardPage({ onNavigateTo }: DashboardPageProps) {
     const {user} = useAuth();
     const {data: dailyOverview, isLoading: dailyLoading, error: dailyError} = useDailyOverview();
     const {data: weeklyOverview, isLoading: weeklyLoading, error: weeklyError} = useWeeklyOverview();
@@ -72,6 +76,7 @@ export function DashboardPage() {
             {activeTab === 'objectives' ? (
                 <DailyQuests
                     isLoading={dailyLoading}
+                    onNavigateToQuests={() => onNavigateTo?.('quests')}
                 />
             ) : (
                 <StatisticsTab

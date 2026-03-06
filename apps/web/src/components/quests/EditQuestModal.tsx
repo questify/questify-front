@@ -1,83 +1,84 @@
-import React, { useState } from 'react';
-import { useCategories, useFrequencies, useCreateQuest } from '@core/hooks/useApi';
+import React, { useState, useEffect } from 'react';
+import { useCategories, useFrequencies, useUpdateQuest } from '@core/hooks/useApi';
+import { Quest } from '@core/types/api';
 
-interface CreateQuestModalProps {
+interface EditQuestModalProps {
+    quest: Quest | null;
     isOpen: boolean;
     onClose: () => void;
 }
 
 const PRESET_EMOJIS = [
-    // Sport & santé
     '🏃', '💪', '🧘', '🚴', '🏋️', '🏊', '⚽', '🎯',
-    '🥋', '🏆', '🧗', '🤸', '🚶', '🏇', '🎾', '🏸',
-    // Apprentissage & créativité
     '📚', '✍️', '🎨', '🎵', '💻', '🧑‍💻', '📱', '🎮',
-    '🎓', '🔬', '📷', '🎭', '🎸', '🖌️', '📝', '🎤',
-    // Alimentation & bien-être
     '🍎', '🥗', '💧', '🥦', '🍊', '🥛', '🌿', '🍵',
-    '🥑', '🫐', '🥕', '🧃', '🍋', '🫖', '🌾', '🥝',
-    // Vie quotidienne
     '😊', '🎉', '💤', '🧹', '🛁', '👨‍👩‍👧', '💰', '📊',
-    '🌟', '🔥', '⚡', '🧠', '❤️', '🏠', '🚗', '✈️',
-    '🌍', '🌙', '☀️', '🌈', '🎁', '🤝', '🧩', '💡',
+    '🌟', '🔥', '⚡', '🧠', '❤️', '🏆', '🎓', '✈️',
+    '🌍', '🏠', '🚗', '🎭', '📷', '🧩', '🎸', '🥋',
 ];
 
-export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
+export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) {
     const { data: categories } = useCategories();
     const { data: frequencies } = useFrequencies();
-    const createQuest = useCreateQuest();
+    const updateQuest = useUpdateQuest();
 
     const [formData, setFormData] = useState({
-        svg_icon: PRESET_EMOJIS[0], // Pré-sélectionner le premier emoji
+        svg_icon: '',
         title: '',
         description: '',
         category_id: '',
-        frequency: '' as 'daily' | 'weekly' | 'monthly' | '',
+        frequency: '',
         is_private: false,
         points: 0,
         malus: 0,
     });
 
+    // Populate form when quest changes
+    useEffect(() => {
+        if (quest) {
+            setFormData({
+                svg_icon: quest.svg_icon || '',
+                title: quest.title || '',
+                description: quest.description || '',
+                category_id: quest.category_id || '',
+                frequency: quest.frequency || '',
+                is_private: quest.is_private || false,
+                points: quest.points || 0,
+                malus: quest.malus || 0,
+            });
+        }
+    }, [quest]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.title || !formData.category_id || !formData.frequency) {
+        if (!quest || !formData.title || !formData.category_id || !formData.frequency) {
             alert('Veuillez remplir tous les champs obligatoires');
             return;
         }
 
         try {
-            await createQuest.mutateAsync({
-                title: formData.title,
-                description: formData.description || null,
-                category_id: formData.category_id,
-                is_active: true,
-                is_private: formData.is_private,
-                frequency: formData.frequency as 'daily' | 'weekly' | 'monthly',
-                points: formData.points,
-                malus: formData.malus || 0,
-                svg_icon: formData.svg_icon || null,
-            });
-
-            // Reset form and close modal
-            setFormData({
-                svg_icon: PRESET_EMOJIS[0],
-                title: '',
-                description: '',
-                category_id: '',
-                frequency: '',
-                is_private: false,
-                points: 0,
-                malus: 0,
+            await updateQuest.mutateAsync({
+                id: quest.id,
+                data: {
+                    title: formData.title,
+                    description: formData.description || null,
+                    category_id: formData.category_id,
+                    is_private: formData.is_private,
+                    frequency: formData.frequency,
+                    points: formData.points,
+                    malus: formData.malus || 0,
+                    svg_icon: formData.svg_icon || null,
+                },
             });
             onClose();
         } catch (error) {
-            console.error('Failed to create quest:', error);
-            alert('Erreur lors de la création de la quête');
+            console.error('Failed to update quest:', error);
+            alert('Erreur lors de la mise à jour de la quête');
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !quest) return null;
 
     return (
         <div
@@ -109,7 +110,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 700 }}>Nouvelle quête</h2>
+                <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 700 }}>Modifier la quête</h2>
 
                 <form onSubmit={handleSubmit}>
                     {/* Emoji */}
@@ -182,9 +183,9 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                         </label>
                         <input
                             type="text"
-                            placeholder="Ex: Aller courir 30 minutes en 10 minutes de marche"
+                            placeholder="Ex: Aller courir 30 minutes..."
                             value={formData.description || ''}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value || ''})}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value || '' })}
                             style={{
                                 width: '100%',
                                 padding: '12px',
@@ -228,12 +229,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                         </label>
                         <select
                             value={formData.frequency}
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    frequency: e.target.value as 'daily' | 'weekly' | 'monthly',
-                                })
-                            }
+                            onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                             required
                             style={{
                                 width: '100%',
@@ -249,35 +245,6 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                                     {frequency.name}
                                 </option>
                             ))}
-                        </select>
-                    </div>
-
-                    {/* Publication */}
-                    <div className="form-group" style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-                            Niveau de visibilité *
-                        </label>
-                        <select
-                            value={formData.is_private as unknown as string}
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    is_private: e.target.value as unknown as true | false,
-                                })
-                            }
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '2px solid #E5E5E5',
-                                borderRadius: '10px',
-                                fontSize: '14px',
-                            }}
-                        >
-                            <option value="">Sélectionner un niveau de visibilité</option>
-
-                                <option key='publique' value={'true'}>Publique</option>
-                                <option key='privé' value={'true'}>Privée</option>
                         </select>
                     </div>
 
@@ -322,16 +289,12 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                                 fontSize: '14px',
                             }}
                         />
-                        <small style={{ fontSize: '12px', color: '#6B6B6B', marginTop: '4px', display: 'block' }}>
-                            Points retirés si l'objectif n'est pas complété
-                        </small>
                     </div>
 
                     {/* Buttons */}
                     <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                         <button
                             type="button"
-                            className="btn btn-outline"
                             onClick={onClose}
                             style={{
                                 flex: 1,
@@ -348,8 +311,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-primary"
-                            disabled={createQuest.isPending}
+                            disabled={updateQuest.isPending}
                             style={{
                                 flex: 1,
                                 padding: '12px',
@@ -358,11 +320,11 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                                 backgroundColor: '#C8B7E8',
                                 color: '#1A1A1A',
                                 fontWeight: 600,
-                                cursor: createQuest.isPending ? 'not-allowed' : 'pointer',
-                                opacity: createQuest.isPending ? 0.6 : 1,
+                                cursor: updateQuest.isPending ? 'not-allowed' : 'pointer',
+                                opacity: updateQuest.isPending ? 0.6 : 1,
                             }}
                         >
-                            {createQuest.isPending ? 'Création...' : 'Créer'}
+                            {updateQuest.isPending ? 'Enregistrement...' : '💾 Enregistrer'}
                         </button>
                     </div>
                 </form>
