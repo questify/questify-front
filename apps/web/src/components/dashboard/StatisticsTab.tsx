@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {useAuth} from '@core/contexts/AuthContext';
 import {useDailyMoodHistory, usePositiveThingsHistory, useValidationsHistory} from '@core/hooks/useApi';
+import { YearlyBoard } from '../board/YearlyBoard';
 
 interface StatisticsTabProps {
     dailyLoading: boolean;
@@ -246,6 +247,12 @@ export function StatisticsTab({
                         </div>
                     </>
                 )}
+            </div>
+
+            {/* Yearly Board Section */}
+            <div className="card" style={{ marginTop: '20px' }}>
+                <h3 style={{ marginBottom: '16px' }}>Tableau annuel 📅</h3>
+                <YearlyBoard />
             </div>
 
             {/* History Section */}
