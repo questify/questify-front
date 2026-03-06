@@ -14,6 +14,12 @@ import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory 
 import { Category } from '@/core/types/api';
 import { QuestifyColors } from '@/mobile/constants/colors';
 
+const PRESET_EMOJIS = [
+  '🏃', '💪', '🎯', '📚', '🍎', '💼', '🎨', '🎵',
+  '💻', '🏠', '💰', '🌿', '😊', '🎉', '💤', '🧹',
+  '🚴', '🏊', '⚽', '🎮', '✍️', '🧘', '📱', '🛁',
+];
+
 interface ManageCategoriesModalProps {
   visible: boolean;
   onClose: () => void;
@@ -216,6 +222,23 @@ export function ManageCategoriesModal({ visible, onClose }: ManageCategoriesModa
         {isCreating ? (
           <View style={styles.createForm}>
             <Text style={styles.formTitle}>Nouvelle catégorie</Text>
+
+            {/* Emoji Grid */}
+            <View style={styles.emojiGrid}>
+              {PRESET_EMOJIS.map((emoji, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.emojiButton,
+                    formData.svg_icon === emoji && styles.emojiButtonSelected,
+                  ]}
+                  onPress={() => setFormData({ ...formData, svg_icon: emoji })}
+                  activeOpacity={0.7}>
+                  <Text style={styles.emojiText}>{emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <View style={styles.formRow}>
               <TextInput
                 style={styles.emojiInput}
@@ -441,5 +464,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: QuestifyColors.primary,
+  },
+  emojiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  emojiButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: QuestifyColors.border,
+    backgroundColor: QuestifyColors.backgroundLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiButtonSelected: {
+    borderColor: QuestifyColors.primary,
+    backgroundColor: QuestifyColors.primaryLight,
+  },
+  emojiText: {
+    fontSize: 24,
   },
 });

@@ -103,6 +103,7 @@ export function CreateRewardModal({ isOpen, onClose }: CreateRewardModalProps) {
                     width: '100%',
                     maxHeight: '90vh',
                     overflowY: 'auto',
+                    overflowX: 'hidden',
                     boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)'
                 }}
             >

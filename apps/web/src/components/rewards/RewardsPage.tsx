@@ -4,6 +4,7 @@ import { useAuth } from '@core/contexts/AuthContext';
 import { CreateRewardModal } from './CreateRewardModal';
 import { RewardCard } from './RewardCard';
 import { Reward } from '@core/types/api';
+import toast from 'react-hot-toast';
 
 type RewardTier = 'small' | 'medium' | 'large' | 'xlarge';
 type TabType = 'badges' | 'gifts';
@@ -15,6 +16,7 @@ export function RewardsPage() {
 
     const [activeTab, setActiveTab] = useState<TabType>('gifts');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [confirmPurchaseModal, setConfirmPurchaseModal] = useState<{isOpen: boolean; rewardId: string | null; cost: number; rewardTitle: string} | null>(null);
 
     // Calculate user points (default to 0 if not available)
     const userPoints = user?.total_points || 0;
@@ -41,20 +43,33 @@ export function RewardsPage() {
 
     const handlePurchase = async (rewardId: string, cost: number) => {
         if (!user?.id) {
-            alert('Vous devez être connecté pour acheter une récompense');
+            toast.error('Vous devez être connecté pour acheter une récompense');
             return;
         }
 
         if (userPoints < cost) {
-            alert('Pas assez de points !');
+            toast.error('Pas assez de points !', {
+                icon: '😢'
+            });
             return;
         }
 
-        if (!confirm(`Voulez-vous vraiment acheter cette récompense pour ${cost} points ?`)) {
-            return;
-        }
+        // Find reward title
+        const reward = rewards?.find(r => r.id === rewardId);
 
-        purchaseReward.mutate(rewardId, {
+        // Open confirmation modal
+        setConfirmPurchaseModal({
+            isOpen: true,
+            rewardId,
+            cost,
+            rewardTitle: reward?.title || 'cette récompense'
+        });
+    };
+
+    const confirmPurchase = async () => {
+        if (!confirmPurchaseModal?.rewardId) return;
+
+        purchaseReward.mutate(confirmPurchaseModal.rewardId, {
             onSuccess: async (data) => {
                 // Update user points
                 if (data?.user) {
@@ -69,11 +84,16 @@ export function RewardsPage() {
                         console.error('Failed to fetch updated user:', error);
                     }
                 }
-                alert('Récompense achetée avec succès ! 🎉');
+                toast.success('Récompense achetée avec succès !', {
+                    icon: '🎉',
+                    duration: 4000,
+                });
+                setConfirmPurchaseModal(null);
             },
             onError: (error) => {
                 console.error('Failed to purchase reward:', error);
-                alert('Erreur lors de l\'achat de la récompense');
+                toast.error('Erreur lors de l\'achat de la récompense');
+                setConfirmPurchaseModal(null);
             }
         });
     };
@@ -424,6 +444,96 @@ export function RewardsPage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
             />
+
+            {/* Confirmation Modal */}
+            {confirmPurchaseModal?.isOpen && (
+                <div
+                    className="modal-overlay"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setConfirmPurchaseModal(null)}
+                >
+                    <div
+                        className="modal"
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '16px',
+                            padding: '32px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎁</div>
+                        <h3 style={{ fontSize: '20px', marginBottom: '16px', fontWeight: 700 }}>
+                            Confirmer l'achat
+                        </h3>
+                        <p style={{ color: '#6B6B6B', marginBottom: '24px', fontSize: '15px' }}>
+                            Voulez-vous acheter <strong>{confirmPurchaseModal.rewardTitle}</strong> pour{' '}
+                            <strong style={{ color: '#C8B7E8' }}>{confirmPurchaseModal.cost} points</strong> ?
+                        </p>
+                        <div style={{
+                            backgroundColor: '#F5F2FA',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            marginBottom: '24px'
+                        }}>
+                            <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '4px' }}>
+                                Points restants après achat
+                            </div>
+                            <div style={{ fontSize: '24px', fontWeight: 700, color: '#C8B7E8' }}>
+                                {(userPoints - confirmPurchaseModal.cost).toLocaleString()}
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => setConfirmPurchaseModal(null)}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: '2px solid #E5E5E5',
+                                    backgroundColor: 'white',
+                                    color: '#1A1A1A',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={confirmPurchase}
+                                disabled={purchaseReward.isPending}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    backgroundColor: '#C8B7E8',
+                                    color: '#1A1A1A',
+                                    fontWeight: 600,
+                                    cursor: purchaseReward.isPending ? 'not-allowed' : 'pointer',
+                                    opacity: purchaseReward.isPending ? 0.6 : 1,
+                                }}
+                            >
+                                {purchaseReward.isPending ? 'Achat...' : 'Confirmer'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

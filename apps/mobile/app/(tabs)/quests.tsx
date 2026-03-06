@@ -16,10 +16,13 @@ import { ManageCategoriesModal } from '@/mobile/components/quests/ManageCategori
 export default function QuestsScreen() {
     const { user, refreshUser } = useAuth();
   const { data: quests, isLoading, refetch } = useQuests();
+  const { data: categories } = useCategories();
   const createValidation = useCreateValidation();
   const updateQuest = useUpdateQuest();
 
   const [tab, setTab] = useState<'active' | 'archived'>('active');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -33,7 +36,15 @@ export default function QuestsScreen() {
 
   const activeQuests = quests?.filter(q => q.is_active) || [];
   const archivedQuests = quests?.filter(q => !q.is_active) || [];
-  const displayedQuests = tab === 'active' ? activeQuests : archivedQuests;
+
+  // Apply filters
+  const filteredQuests = (tab === 'active' ? activeQuests : archivedQuests).filter(quest => {
+    if (selectedCategory !== 'all' && quest.category_id !== selectedCategory) return false;
+    if (selectedFrequency !== 'all' && quest.frequency !== selectedFrequency) return false;
+    return true;
+  });
+
+  const displayedQuests = filteredQuests;
 
   const handleValidate = (quest: Quest) => {
     const points = quest.points;
@@ -152,6 +163,13 @@ export default function QuestsScreen() {
           <View style={styles.meta}>
             <Text style={styles.category}>{quest.category_name}</Text>
             <Text style={styles.frequency}>{quest.frequency}</Text>
+            {quest.validations_today && quest.validations_today.length > 0 && (
+              <View style={styles.validationBadge}>
+                <Text style={styles.validationBadgeText}>
+                  ✓ {quest.validations_today.length}x
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={styles.points}>+{quest.points} pts</Text>
         </View>
@@ -159,6 +177,12 @@ export default function QuestsScreen() {
         {/* Actions */}
         {tab === 'active' && (
           <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.button, styles.editButton]}
+              onPress={() => Alert.alert('Modifier', 'Fonctionnalité de modification en cours de développement')}
+              activeOpacity={0.7}>
+              <Text style={styles.buttonText}>✏️ Modifier</Text>
+            </TouchableOpacity>
             {!isValidated && (
               <TouchableOpacity
                 style={[styles.button, styles.completeButton]}
@@ -266,6 +290,60 @@ export default function QuestsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filters */}
+      {tab === 'active' && (
+        <View style={styles.filtersContainer}>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Catégorie:</Text>
+            <View style={styles.filterChipsContainer}>
+              <TouchableOpacity
+                style={[styles.filterChip, selectedCategory === 'all' && styles.filterChipSelected]}
+                onPress={() => setSelectedCategory('all')}
+                activeOpacity={0.7}>
+                <Text style={[styles.filterChipText, selectedCategory === 'all' && styles.filterChipTextSelected]}>
+                  Toutes
+                </Text>
+              </TouchableOpacity>
+              {categories?.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.filterChip, selectedCategory === cat.id && styles.filterChipSelected]}
+                  onPress={() => setSelectedCategory(cat.id)}
+                  activeOpacity={0.7}>
+                  <Text style={[styles.filterChipText, selectedCategory === cat.id && styles.filterChipTextSelected]}>
+                    {cat.svg_icon} {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Fréquence:</Text>
+            <View style={styles.filterChipsContainer}>
+              <TouchableOpacity
+                style={[styles.filterChip, selectedFrequency === 'all' && styles.filterChipSelected]}
+                onPress={() => setSelectedFrequency('all')}
+                activeOpacity={0.7}>
+                <Text style={[styles.filterChipText, selectedFrequency === 'all' && styles.filterChipTextSelected]}>
+                  Toutes
+                </Text>
+              </TouchableOpacity>
+              {['Journalier', 'Hebdomadaire', 'Mensuel'].map(freq => (
+                <TouchableOpacity
+                  key={freq}
+                  style={[styles.filterChip, selectedFrequency === freq && styles.filterChipSelected]}
+                  onPress={() => setSelectedFrequency(freq)}
+                  activeOpacity={0.7}>
+                  <Text style={[styles.filterChipText, selectedFrequency === freq && styles.filterChipTextSelected]}>
+                    {freq}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Quest List */}
       <FlatList
@@ -375,6 +453,57 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: QuestifyColors.textPrimary,
   },
+  filtersContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 12,
+  },
+  filterRow: {
+    gap: 8,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
+    marginBottom: 4,
+  },
+  filterChipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: QuestifyColors.backgroundLight,
+    borderWidth: 1,
+    borderColor: QuestifyColors.border,
+  },
+  filterChipSelected: {
+    backgroundColor: QuestifyColors.primary,
+    borderColor: QuestifyColors.primary,
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: QuestifyColors.textSecondary,
+  },
+  filterChipTextSelected: {
+    color: QuestifyColors.textPrimary,
+    fontWeight: '600',
+  },
+  validationBadge: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: QuestifyColors.green,
+  },
+  validationBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
+  },
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -418,6 +547,10 @@ const styles = StyleSheet.create({
   },
   meta: {
     flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
   },
   category: {
     fontSize: 12,
@@ -426,7 +559,6 @@ const styles = StyleSheet.create({
   frequency: {
     fontSize: 12,
     color: QuestifyColors.textLight,
-    marginTop: 2,
   },
   points: {
     fontSize: 16,
@@ -445,6 +577,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 40,
     justifyContent: 'center',
+  },
+  editButton: {
+    backgroundColor: QuestifyColors.backgroundDark,
   },
   completeButton: {
     backgroundColor: QuestifyColors.green,
