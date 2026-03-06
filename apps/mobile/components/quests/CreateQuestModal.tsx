@@ -12,6 +12,13 @@ import { Modal } from '@/mobile/components/ui/Modal';
 import { QuestifyColors } from '@/mobile/constants/colors';
 import { useCategories, useFrequencies, useCreateQuest } from '@/core/hooks/useApi';
 
+const PRESET_EMOJIS = [
+  '🏃', '💪', '🧘', '🚴', '🏋️', '🏊', '⚽', '🎯',
+  '📚', '✍️', '🎨', '🎵', '💻', '🧑‍💻', '📱', '🎮',
+  '🍎', '🥗', '💧', '🥦', '🍊', '🥛', '🌿', '🍵',
+  '😊', '🎉', '💤', '🧹', '🛁', '👨‍👩‍👧', '💰', '📊',
+];
+
 interface CreateQuestModalProps {
   visible: boolean;
   onClose: () => void;
@@ -23,6 +30,7 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
   const { data: frequencies } = useFrequencies();
   const createQuest = useCreateQuest();
 
+  const [svgIcon, setSvgIcon] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -45,6 +53,7 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
         points: parseInt(points) || 10,
         malus: parseInt(malus) || 0,
         is_active: true,
+        svg_icon: svgIcon || null,
       },
       {
         onSuccess: () => {
@@ -61,6 +70,7 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
   };
 
   const resetForm = () => {
+    setSvgIcon('');
     setTitle('');
     setDescription('');
     setCategoryId('');
@@ -72,6 +82,33 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
   return (
     <Modal visible={visible} onClose={onClose} title="Nouvelle quête">
       <View style={styles.form}>
+        {/* Emoji Selector */}
+        <View style={styles.field}>
+          <Text style={styles.label}>Emoji de la quête</Text>
+          <View style={styles.emojiGrid}>
+            {PRESET_EMOJIS.map((emoji, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.emojiButton,
+                  svgIcon === emoji && styles.emojiButtonSelected,
+                ]}
+                onPress={() => setSvgIcon(emoji)}
+                activeOpacity={0.7}>
+                <Text style={styles.emojiText}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TextInput
+            style={styles.input}
+            value={svgIcon}
+            onChangeText={setSvgIcon}
+            placeholder="Ou entre un autre emoji..."
+            placeholderTextColor={QuestifyColors.textLight}
+            maxLength={2}
+          />
+        </View>
+
         <View style={styles.field}>
           <Text style={styles.label}>Titre *</Text>
           <TextInput
@@ -261,5 +298,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: QuestifyColors.textPrimary,
+  },
+  emojiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  emojiButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: QuestifyColors.border,
+    backgroundColor: QuestifyColors.backgroundLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiButtonSelected: {
+    borderColor: QuestifyColors.primary,
+    backgroundColor: QuestifyColors.primaryLight,
+  },
+  emojiText: {
+    fontSize: 24,
   },
 });

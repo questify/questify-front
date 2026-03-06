@@ -6,6 +6,12 @@ interface CreateCategoryModalProps {
     onClose: () => void;
 }
 
+const PRESET_CATEGORY_EMOJIS = [
+    '💪', '🏃', '🧘', '🎯', '📚', '✍️', '💻', '🎨',
+    '🍎', '💰', '👨‍👩‍👧', '🏠', '🚗', '✈️', '🎮', '📱',
+    '🌟', '💼', '🎓', '❤️', '🧠', '🎵', '🌿', '⚡',
+];
+
 export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
     const createCategory = useCreateCategory();
 
@@ -84,16 +90,36 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
                             Emoji de la catégorie
                         </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                            {PRESET_CATEGORY_EMOJIS.map((emoji, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, svg_icon: emoji })}
+                                    style={{
+                                        fontSize: '24px',
+                                        padding: '8px',
+                                        border: formData.svg_icon === emoji ? '2px solid #C8B7E8' : '2px solid #E5E5E5',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        backgroundColor: formData.svg_icon === emoji ? '#F5F0FF' : 'white',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >
+                                    {emoji}
+                                </button>
+                            ))}
+                        </div>
                         <input
                             type="text"
-                            placeholder="Ex: 💪"
+                            placeholder="Ou entre un autre emoji..."
                             maxLength={2}
                             value={formData.svg_icon}
                             onChange={(e) => setFormData({ ...formData, svg_icon: e.target.value })}
                             style={{
                                 width: '100%',
                                 padding: '12px',
-                                fontSize: '32px',
+                                fontSize: '24px',
                                 textAlign: 'center',
                                 border: '2px solid #E5E5E5',
                                 borderRadius: '10px',

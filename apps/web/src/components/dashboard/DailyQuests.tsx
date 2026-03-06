@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useMemo} from 'react';
 import {Quest} from '@core/types/api'
 import {
     useCreateValidation,
@@ -6,10 +6,12 @@ import {
     useCreateOrUpdatePositiveThings,
     useDailyMoodHistory,
     usePositiveThingsHistory,
-    useQuests
+    useQuests,
+    useCategories
 }  from '@core/hooks/useApi';
 import {useAuth} from '@core/contexts/AuthContext';
 import {ConfirmValidationModal} from '../quests/ConfirmValidationModal';
+import toast from 'react-hot-toast';
 
 interface DailyQuestsProps {
     quests?: Quest[];
@@ -38,6 +40,7 @@ const valueToMood: Record<number, NonNullable<Mood>> = {
 export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
     const { user, updateUser } = useAuth();
     const quests = useQuests().data;
+    const { data: categories } = useCategories();
     const today = new Date().toISOString().split('T')[0];
     // Hooks for validations
     const createValidation = useCreateValidation();
@@ -50,11 +53,32 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
 
     const [selectedMood, setSelectedMood] = useState<Mood>(null);
     const [positiveThings, setPositiveThings] = useState(['', '', '']);
+    const [isPositiveThingsEditable, setIsPositiveThingsEditable] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedFrequency, setSelectedFrequency] = useState<string>('all');
     const [confirmationModal, setConfirmationModal] = useState<{ isOpen: boolean; questId: string | null; points: number }>({
         isOpen: false,
         questId: null,
         points: 0,
     });
+
+    // Filter active quests only (not archived) and apply category/frequency filters
+    const filteredQuests = useMemo(() => {
+        if (!quests) return [];
+
+        return quests.filter(quest => {
+            // Ne pas afficher les quêtes archivées
+            if (!quest.is_active) return false;
+
+            // Filter by category
+            if (selectedCategory !== 'all' && quest.category_id !== selectedCategory) return false;
+
+            // Filter by frequency
+            if (selectedFrequency !== 'all' && quest.frequency !== selectedFrequency) return false;
+
+            return true;
+        });
+    }, [quests, selectedCategory, selectedFrequency]);
 
     // Load existing data when available
     useEffect(() => {
@@ -64,12 +88,16 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
     }, [existingMood]);
 
     useEffect(() => {
-        if (existingPositiveThings) {
+        if (existingPositiveThings && existingPositiveThings.length > 0) {
+            const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
             setPositiveThings([
                 existingPositiveThings[0]?.thing_1 || '',
                 existingPositiveThings[0]?.thing_2 || '',
                 existingPositiveThings[0]?.thing_3 || '',
             ]);
+            setIsPositiveThingsEditable(!hasData);
+        } else {
+            setIsPositiveThingsEditable(true);
         }
     }, [existingPositiveThings]);
 
@@ -133,6 +161,12 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
             createOrUpdateMood.mutate({
                 date: today,
                 mood_value: moodToValue[mood]
+            }, {
+                onSuccess: () => {
+                    toast.success('Info enregistrée', {
+                        icon: '✅',
+                    });
+                }
             });
         }
     };
@@ -149,6 +183,13 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
             thing_1: positiveThings[0] || null,
             thing_2: positiveThings[1] || null,
             thing_3: positiveThings[2] || null,
+        }, {
+            onSuccess: () => {
+                toast.success('Info enregistrée', {
+                    icon: '✅',
+                });
+                setIsPositiveThingsEditable(false);
+            }
         });
     };
 
@@ -233,13 +274,33 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
 
         {/* Positive Things Card */}
         <div className="card" style={{ marginTop: '20px' }}>
-            <h3 style={{ marginBottom: '16px' }}>3 choses positives du jour ✨</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0 }}>3 choses positives du jour ✨</h3>
+                {!isPositiveThingsEditable && (
+                    <button
+                        onClick={() => setIsPositiveThingsEditable(true)}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: '#F0F0F0',
+                            color: '#1A1A1A',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                        }}
+                    >
+                        ✏️ Modifier
+                    </button>
+                )}
+            </div>
             <div style={{ marginBottom: '12px' }}>
                 <input
                     type="text"
                     placeholder="1. Quelque chose de positif..."
                     value={positiveThings[0]}
                     onChange={(e) => handlePositiveThingChange(0, e.target.value)}
+                    disabled={!isPositiveThingsEditable}
                     style={{
                         width: '100%',
                         padding: '12px',
@@ -247,6 +308,8 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                         borderRadius: '10px',
                         marginBottom: '8px',
                         fontSize: '14px',
+                        backgroundColor: isPositiveThingsEditable ? 'white' : '#F8F8F8',
+                        cursor: isPositiveThingsEditable ? 'text' : 'not-allowed',
                     }}
                 />
                 <input
@@ -254,6 +317,7 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                     placeholder="2. Quelque chose de positif..."
                     value={positiveThings[1]}
                     onChange={(e) => handlePositiveThingChange(1, e.target.value)}
+                    disabled={!isPositiveThingsEditable}
                     style={{
                         width: '100%',
                         padding: '12px',
@@ -261,6 +325,8 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                         borderRadius: '10px',
                         marginBottom: '8px',
                         fontSize: '14px',
+                        backgroundColor: isPositiveThingsEditable ? 'white' : '#F8F8F8',
+                        cursor: isPositiveThingsEditable ? 'text' : 'not-allowed',
                     }}
                 />
                 <input
@@ -268,30 +334,35 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                     placeholder="3. Quelque chose de positif..."
                     value={positiveThings[2]}
                     onChange={(e) => handlePositiveThingChange(2, e.target.value)}
+                    disabled={!isPositiveThingsEditable}
                     style={{
                         width: '100%',
                         padding: '12px',
                         border: '2px solid #E5E5E5',
                         borderRadius: '10px',
                         fontSize: '14px',
+                        backgroundColor: isPositiveThingsEditable ? 'white' : '#F8F8F8',
+                        cursor: isPositiveThingsEditable ? 'text' : 'not-allowed',
                     }}
                 />
             </div>
-            <button
-                className="btn btn-primary"
-                onClick={handleSavePositiveThings}
-                style={{
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: '#C8B7E8',
-                    color: '#1A1A1A',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                }}
-            >
-                💾 Sauvegarder
-            </button>
+            {isPositiveThingsEditable && (
+                <button
+                    className="btn btn-primary"
+                    onClick={handleSavePositiveThings}
+                    style={{
+                        padding: '12px 24px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: '#C8B7E8',
+                        color: '#1A1A1A',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                    }}
+                >
+                    💾 Sauvegarder
+                </button>
+            )}
         </div>
 
         <div className="card">
@@ -301,19 +372,57 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: '20px',
-                        cursor: 'pointer'
                     }}
                 >
-                    <h3 style={{ margin: 0 }}>Mes quêtes du jour</h3>
+                    <h3 style={{ margin: 0 }}>Mes quêtes</h3>
                 </div>
+
+                {/* Filters */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '2px solid #E5E5E5',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <option value="all">Toutes catégories</option>
+                        {categories?.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={selectedFrequency}
+                        onChange={(e) => setSelectedFrequency(e.target.value)}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '2px solid #E5E5E5',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <option value="all">Toutes fréquences</option>
+                        <option value="Journalier">Journalier</option>
+                        <option value="Hebdomadaire">Hebdomadaire</option>
+                        <option value="Mensuel">Mensuel</option>
+                        <option value="Trimestriel">Trimestriel</option>
+                        <option value="Annuel">Annuel</option>
+                    </select>
+                </div>
+
                 <div>
                     {isLoading ? (
                         <p style={{ color: '#6B6B6B', textAlign: 'center' }}>Chargement...</p>
-                    ) : quests?.length === 0 ? (
-                        <p style={{ color: '#6B6B6B', textAlign: 'center' }}>Aucune quête pour aujourd'hui</p>
+                    ) : filteredQuests?.length === 0 ? (
+                        <p style={{ color: '#6B6B6B', textAlign: 'center' }}>Aucune quête trouvée</p>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {quests?.map((quest, index) => {
+                            {filteredQuests?.map((quest, index) => {
                                 const points = quest.points;
 
                                 return (
@@ -351,12 +460,39 @@ export function DailyQuests({ isLoading = false }: DailyQuestsProps) {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', gap: '12px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
                                                     <span style={{ fontWeight: 700, color: '#F2B8A3' }}>+{points} pts</span>
                                                 </span>
+                                                {quest.validations_today && quest.validations_today.length > 0 && (
+                                                    <span style={{
+                                                        backgroundColor: '#C8EAD3',
+                                                        padding: '4px 12px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '13px',
+                                                        fontWeight: 600,
+                                                        color: '#1A1A1A',
+                                                    }}>
+                                                        ✓ {quest.validations_today.length}x validée{quest.validations_today.length > 1 ? 's' : ''}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    onClick={() => window.location.hash = 'quests'}
+                                                    style={{
+                                                        padding: '8px 16px',
+                                                        borderRadius: '8px',
+                                                        border: 'none',
+                                                        backgroundColor: '#F0F0F0',
+                                                        color: '#1A1A1A',
+                                                        fontWeight: 600,
+                                                        cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    ✏️ Modifier
+                                                </button>
                                                 <button
                                                     className="btn btn-primary"
                                                     onClick={() => openConfirmationModal(quest.id, quest.points)}

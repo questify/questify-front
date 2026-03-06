@@ -13,12 +13,34 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/core/contexts/AuthContext';
 import {
   useQuests,
-  useDailyOverview, 
+  useDailyOverview,
     useCreateValidation,
+    useCreateOrUpdateDailyMood,
+    useCreateOrUpdatePositiveThings,
+    useDailyMoodHistory,
+    usePositiveThingsHistory,
 } from '@/core/hooks/useApi';
 import { QuestifyColors } from '@/mobile/constants/colors';
 import { Card } from '@/mobile/components/ui/Card';
 import { Quest } from "@/core/types/api";
+
+type Mood = 'amazing' | 'good' | 'okay' | 'bad' | 'terrible' | null;
+
+const moodToValue: Record<Mood, number> = {
+  amazing: 5,
+  good: 4,
+  okay: 3,
+  bad: 2,
+  terrible: 1,
+};
+
+const valueToMood: Record<number, Mood> = {
+  5: 'amazing',
+  4: 'good',
+  3: 'okay',
+  2: 'bad',
+  1: 'terrible',
+};
 
 export default function DashboardScreen() {
   const { user, refreshUser } = useAuth();
@@ -28,8 +50,39 @@ export default function DashboardScreen() {
     const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
     const createValidation = useCreateValidation();
 
+    // Wellness hooks
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existingMood } = useDailyMoodHistory(1);
+    const createOrUpdateMood = useCreateOrUpdateDailyMood();
+    const { data: existingPositiveThings } = usePositiveThingsHistory(1);
+    const createOrUpdatePositiveThings = useCreateOrUpdatePositiveThings();
+
+    const [selectedMood, setSelectedMood] = useState<Mood>(null);
+    const [positiveThings, setPositiveThings] = useState(['', '', '']);
+    const [isPositiveThingsEditable, setIsPositiveThingsEditable] = useState(false);
 
     const [refreshing, setRefreshing] = React.useState(false);
+
+  // Load existing wellness data
+  React.useEffect(() => {
+    if (existingMood && existingMood[0]?.mood_value) {
+      setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+    }
+  }, [existingMood]);
+
+  React.useEffect(() => {
+    if (existingPositiveThings && existingPositiveThings.length > 0) {
+      const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
+      setPositiveThings([
+        existingPositiveThings[0]?.thing_1 || '',
+        existingPositiveThings[0]?.thing_2 || '',
+        existingPositiveThings[0]?.thing_3 || '',
+      ]);
+      setIsPositiveThingsEditable(!hasData);
+    } else {
+      setIsPositiveThingsEditable(true);
+    }
+  }, [existingPositiveThings]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -95,6 +148,40 @@ export default function DashboardScreen() {
         );
     };
 
+    const handleMoodSelect = (mood: Mood) => {
+        setSelectedMood(mood);
+        if (mood) {
+            createOrUpdateMood.mutate({
+                date: today,
+                mood_value: moodToValue[mood]
+            }, {
+                onSuccess: () => {
+                    Alert.alert('✅ Info enregistrée', 'Ton humeur a été enregistrée');
+                }
+            });
+        }
+    };
+
+    const handlePositiveThingChange = (index: number, value: string) => {
+        const newPositiveThings = [...positiveThings];
+        newPositiveThings[index] = value;
+        setPositiveThings(newPositiveThings);
+    };
+
+    const handleSavePositiveThings = () => {
+        createOrUpdatePositiveThings.mutate({
+            date: today,
+            thing_1: positiveThings[0] || null,
+            thing_2: positiveThings[1] || null,
+            thing_3: positiveThings[2] || null,
+        }, {
+            onSuccess: () => {
+                Alert.alert('✅ Info enregistrée', 'Tes 3 choses positives ont été enregistrées');
+                setIsPositiveThingsEditable(false);
+            }
+        });
+    };
+
   const activeQuests = quests?.filter(q => q.is_active) || [];
   const validatedToday = dailyOverview?.validated_count || 0;
 
@@ -124,6 +211,90 @@ export default function DashboardScreen() {
           <Text style={styles.greeting}>Bonjour {user?.name || 'Utilisateur'} 👋</Text>
           <Text style={styles.subtitle}>Prêt à conquérir la journée ?</Text>
         </View>
+
+        {/* Mood Card */}
+        <Card style={styles.wellnessCard}>
+          <Text style={styles.wellnessTitle}>Comment te sens-tu aujourd'hui ? 😊</Text>
+          <View style={styles.moodContainer}>
+            <TouchableOpacity
+              style={[styles.moodButton, selectedMood === 'amazing' && styles.moodButtonSelected]}
+              onPress={() => handleMoodSelect('amazing')}
+              activeOpacity={0.7}>
+              <Text style={styles.moodEmoji}>😍</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.moodButton, selectedMood === 'good' && styles.moodButtonSelected]}
+              onPress={() => handleMoodSelect('good')}
+              activeOpacity={0.7}>
+              <Text style={styles.moodEmoji}>😊</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.moodButton, selectedMood === 'okay' && styles.moodButtonSelected]}
+              onPress={() => handleMoodSelect('okay')}
+              activeOpacity={0.7}>
+              <Text style={styles.moodEmoji}>😐</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.moodButton, selectedMood === 'bad' && styles.moodButtonSelected]}
+              onPress={() => handleMoodSelect('bad')}
+              activeOpacity={0.7}>
+              <Text style={styles.moodEmoji}>😔</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.moodButton, selectedMood === 'terrible' && styles.moodButtonSelected]}
+              onPress={() => handleMoodSelect('terrible')}
+              activeOpacity={0.7}>
+              <Text style={styles.moodEmoji}>😢</Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
+
+        {/* Positive Things Card */}
+        <Card style={styles.wellnessCard}>
+          <View style={styles.wellnessHeader}>
+            <Text style={styles.wellnessTitle}>3 choses positives du jour ✨</Text>
+            {!isPositiveThingsEditable && (
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => setIsPositiveThingsEditable(true)}
+                activeOpacity={0.7}>
+                <Text style={styles.editButtonText}>✏️ Modifier</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <TextInput
+            style={[styles.positiveThingInput, !isPositiveThingsEditable && styles.positiveThingInputDisabled]}
+            value={positiveThings[0]}
+            onChangeText={(text) => handlePositiveThingChange(0, text)}
+            placeholder="1. Quelque chose de positif..."
+            placeholderTextColor={QuestifyColors.textLight}
+            editable={isPositiveThingsEditable}
+          />
+          <TextInput
+            style={[styles.positiveThingInput, !isPositiveThingsEditable && styles.positiveThingInputDisabled]}
+            value={positiveThings[1]}
+            onChangeText={(text) => handlePositiveThingChange(1, text)}
+            placeholder="2. Quelque chose de positif..."
+            placeholderTextColor={QuestifyColors.textLight}
+            editable={isPositiveThingsEditable}
+          />
+          <TextInput
+            style={[styles.positiveThingInput, !isPositiveThingsEditable && styles.positiveThingInputDisabled]}
+            value={positiveThings[2]}
+            onChangeText={(text) => handlePositiveThingChange(2, text)}
+            placeholder="3. Quelque chose de positif..."
+            placeholderTextColor={QuestifyColors.textLight}
+            editable={isPositiveThingsEditable}
+          />
+          {isPositiveThingsEditable && (
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSavePositiveThings}
+              activeOpacity={0.7}>
+              <Text style={styles.saveButtonText}>💾 Sauvegarder</Text>
+            </TouchableOpacity>
+          )}
+        </Card>
 
         {/* Points Card */}
         <Card style={styles.pointsCard}>
@@ -183,7 +354,16 @@ export default function DashboardScreen() {
                     </Text>
                   )}
                   <View style={styles.questPreviewFooter}>
-                    <Text style={styles.questPreviewCategory}>{quest.category_name}</Text>
+                    <View style={styles.questMetadata}>
+                      <Text style={styles.questPreviewCategory}>{quest.category_name}</Text>
+                      {quest.validations_today && quest.validations_today.length > 0 && (
+                        <View style={styles.validationBadge}>
+                          <Text style={styles.validationBadgeText}>
+                            ✓ {quest.validations_today.length}x
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                       <TouchableOpacity
                         style={styles.validateButton}
                         onPress={() => handleValidate(quest)}
@@ -248,6 +428,81 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: QuestifyColors.textSecondary,
+  },
+  wellnessCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 20,
+  },
+  wellnessHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  wellnessTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
+    marginBottom: 16,
+  },
+  moodContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 8,
+  },
+  moodButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: QuestifyColors.backgroundLight,
+    borderWidth: 2,
+    borderColor: QuestifyColors.border,
+    alignItems: 'center',
+  },
+  moodButtonSelected: {
+    backgroundColor: QuestifyColors.primaryLight,
+    borderColor: QuestifyColors.primary,
+  },
+  moodEmoji: {
+    fontSize: 32,
+  },
+  editButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: QuestifyColors.backgroundDark,
+  },
+  editButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
+  },
+  positiveThingInput: {
+    backgroundColor: QuestifyColors.backgroundLight,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: QuestifyColors.textPrimary,
+    borderWidth: 2,
+    borderColor: QuestifyColors.border,
+    marginBottom: 8,
+  },
+  positiveThingInputDisabled: {
+    backgroundColor: QuestifyColors.backgroundDark,
+  },
+  saveButton: {
+    backgroundColor: QuestifyColors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  saveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
   },
   pointsCard: {
     marginHorizontal: 20,
@@ -375,9 +630,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  questMetadata: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
   questPreviewCategory: {
     fontSize: 12,
     color: QuestifyColors.textSecondary,
+  },
+  validationBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    backgroundColor: QuestifyColors.green,
+  },
+  validationBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
   },
   validatedBadgeContainer: {
     paddingVertical: 6,
