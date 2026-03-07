@@ -5,18 +5,20 @@ import {View, Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/core/contexts/AuthContext';
-import {useQuests, useCategories, useCreateValidation, useUpdateQuest,
+import {useQuests, useCategories, useFrequencies, useCreateValidation, useUpdateQuest,
 } from '@/core/hooks/useApi';
 import { Quest } from '@/core/types/api';
 import { QuestifyColors } from '@/mobile/constants/colors';
 import { Card } from '@/mobile/components/ui/Card';
 import { CreateQuestModal } from '@/mobile/components/quests/CreateQuestModal';
+import { EditQuestModal } from '@/mobile/components/quests/EditQuestModal';
 import { ManageCategoriesModal } from '@/mobile/components/quests/ManageCategoriesModal';
 
 export default function QuestsScreen() {
     const { user, refreshUser } = useAuth();
   const { data: quests, isLoading, refetch } = useQuests();
   const { data: categories } = useCategories();
+  const { data: frequencies } = useFrequencies();
   const createValidation = useCreateValidation();
   const updateQuest = useUpdateQuest();
 
@@ -27,6 +29,7 @@ export default function QuestsScreen() {
   const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -162,7 +165,11 @@ export default function QuestsScreen() {
         <View style={styles.footer}>
           <View style={styles.meta}>
             <Text style={styles.category}>{quest.category_name}</Text>
-            <Text style={styles.frequency}>{quest.frequency}</Text>
+            {quest.frequency && (
+              <View style={styles.frequencyChip}>
+                <Text style={styles.frequencyChipText}>{quest.frequency}</Text>
+              </View>
+            )}
             {quest.validations_today && quest.validations_today.length > 0 && (
               <View style={styles.validationBadge}>
                 <Text style={styles.validationBadgeText}>
@@ -179,7 +186,7 @@ export default function QuestsScreen() {
           <View style={styles.actions}>
             <TouchableOpacity
               style={[styles.button, styles.editButton]}
-              onPress={() => Alert.alert('Modifier', 'Fonctionnalité de modification en cours de développement')}
+              onPress={() => setEditingQuest(quest)}
               activeOpacity={0.7}>
               <Text style={styles.buttonText}>✏️ Modifier</Text>
             </TouchableOpacity>
@@ -329,14 +336,14 @@ export default function QuestsScreen() {
                   Toutes
                 </Text>
               </TouchableOpacity>
-              {['Journalier', 'Hebdomadaire', 'Mensuel'].map(freq => (
+              {frequencies?.map(freq => (
                 <TouchableOpacity
-                  key={freq}
-                  style={[styles.filterChip, selectedFrequency === freq && styles.filterChipSelected]}
-                  onPress={() => setSelectedFrequency(freq)}
+                  key={freq.id}
+                  style={[styles.filterChip, selectedFrequency === freq.name && styles.filterChipSelected]}
+                  onPress={() => setSelectedFrequency(freq.name)}
                   activeOpacity={0.7}>
-                  <Text style={[styles.filterChipText, selectedFrequency === freq && styles.filterChipTextSelected]}>
-                    {freq}
+                  <Text style={[styles.filterChipText, selectedFrequency === freq.name && styles.filterChipTextSelected]}>
+                    {freq.name}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -382,7 +389,17 @@ export default function QuestsScreen() {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={refetch}
         />
-      )} 
+      )}
+
+      {/* Edit Quest Modal */}
+      {editingQuest && (
+        <EditQuestModal
+          visible={editingQuest !== null}
+          quest={editingQuest}
+          onClose={() => setEditingQuest(null)}
+          onSuccess={refetch}
+        />
+      )}
 
       {/* Manage Categories Modal */}
       {isManageCategoriesOpen && (
@@ -559,6 +576,19 @@ const styles = StyleSheet.create({
   frequency: {
     fontSize: 12,
     color: QuestifyColors.textLight,
+  },
+  frequencyChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: '#F0EDFB',
+    borderWidth: 1,
+    borderColor: '#D8CCF0',
+  },
+  frequencyChipText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#7B5CAA',
   },
   points: {
     fontSize: 16,

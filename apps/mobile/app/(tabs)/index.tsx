@@ -8,6 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/core/contexts/AuthContext';
@@ -63,26 +64,37 @@ export default function DashboardScreen() {
 
     const [refreshing, setRefreshing] = React.useState(false);
 
-  // Load existing wellness data
+  // Load existing wellness data — only pre-fill if the record is from today
   React.useEffect(() => {
     if (existingMood && existingMood[0]?.mood_value) {
-      setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+      const moodDate = (existingMood[0]?.date || existingMood[0]?.created_at || '').split('T')[0];
+      if (moodDate === today) {
+        setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+      } else {
+        setSelectedMood(null);
+      }
     }
-  }, [existingMood]);
+  }, [existingMood, today]);
 
   React.useEffect(() => {
     if (existingPositiveThings && existingPositiveThings.length > 0) {
-      const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
-      setPositiveThings([
-        existingPositiveThings[0]?.thing_1 || '',
-        existingPositiveThings[0]?.thing_2 || '',
-        existingPositiveThings[0]?.thing_3 || '',
-      ]);
-      setIsPositiveThingsEditable(!hasData);
+      const ptDate = (existingPositiveThings[0]?.date || existingPositiveThings[0]?.created_at || '').split('T')[0];
+      if (ptDate === today) {
+        const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
+        setPositiveThings([
+          existingPositiveThings[0]?.thing_1 || '',
+          existingPositiveThings[0]?.thing_2 || '',
+          existingPositiveThings[0]?.thing_3 || '',
+        ]);
+        setIsPositiveThingsEditable(!hasData);
+      } else {
+        setPositiveThings(['', '', '']);
+        setIsPositiveThingsEditable(true);
+      }
     } else {
       setIsPositiveThingsEditable(true);
     }
-  }, [existingPositiveThings]);
+  }, [existingPositiveThings, today]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -356,6 +368,11 @@ export default function DashboardScreen() {
                   <View style={styles.questPreviewFooter}>
                     <View style={styles.questMetadata}>
                       <Text style={styles.questPreviewCategory}>{quest.category_name}</Text>
+                      {quest.frequency && (
+                        <View style={styles.frequencyChip}>
+                          <Text style={styles.frequencyChipText}>{quest.frequency}</Text>
+                        </View>
+                      )}
                       {quest.validations_today && quest.validations_today.length > 0 && (
                         <View style={styles.validationBadge}>
                           <Text style={styles.validationBadgeText}>
@@ -365,12 +382,18 @@ export default function DashboardScreen() {
                       )}
                     </View>
                       <TouchableOpacity
-                        style={styles.validateButton}
+                        style={[
+                          styles.validateButton,
+                          isValidated && styles.validateButtonValidated,
+                        ]}
                         onPress={() => handleValidate(quest)}
-                        disabled={validateQuest.isPending}
+                        disabled={validateQuest.isPending || !!isValidated}
                         activeOpacity={0.7}>
-                        <Text style={styles.validateButtonText}>
-                          {validateQuest.isPending ? '...' : '✓ Valider'}
+                        <Text style={[
+                          styles.validateButtonText,
+                          isValidated && styles.validateButtonTextValidated,
+                        ]}>
+                          {validateQuest.isPending ? '...' : isValidated ? '✓ Validée' : '✓ Valider'}
                         </Text>
                       </TouchableOpacity>
                   </View>
@@ -662,16 +685,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: QuestifyColors.success,
   },
+  frequencyChip: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: '#F0EDFB',
+    borderWidth: 1,
+    borderColor: '#D8CCF0',
+  },
+  frequencyChipText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#7B5CAA',
+  },
   validateButton: {
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
     backgroundColor: QuestifyColors.primary,
   },
+  validateButtonValidated: {
+    backgroundColor: QuestifyColors.green,
+  },
   validateButtonText: {
     fontSize: 12,
     fontWeight: '600',
     color: QuestifyColors.textPrimary,
+  },
+  validateButtonTextValidated: {
+    color: '#5BA073',
   },
   emptyText: {
     fontSize: 14,

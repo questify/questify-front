@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { Modal } from '@/mobile/components/ui/Modal';
 import { QuestifyColors } from '@/mobile/constants/colors';
-import { useCategories, useFrequencies, useCreateQuest } from '@/core/hooks/useApi';
+import { useCategories, useFrequencies, useUpdateQuest } from '@/core/hooks/useApi';
+import { Quest } from '@/core/types/api';
 
 const PRESET_EMOJIS = [
   '🏃', '💪', '🧘', '🚴', '🏋️', '🏊', '⚽', '🎯',
@@ -21,18 +22,19 @@ const PRESET_EMOJIS = [
   '🦋', '🌈', '🎭', '🛡️', '🔥', '⚡', '🌊', '🍀',
 ];
 
-interface CreateQuestModalProps {
+interface EditQuestModalProps {
   visible: boolean;
+  quest: Quest | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestModalProps) {
+export function EditQuestModal({ visible, quest, onClose, onSuccess }: EditQuestModalProps) {
   const { data: categories } = useCategories();
   const { data: frequencies } = useFrequencies();
-  const createQuest = useCreateQuest();
+  const updateQuest = useUpdateQuest();
 
-  const [svgIcon, setSvgIcon] = useState(PRESET_EMOJIS[0]);
+  const [svgIcon, setSvgIcon] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -40,49 +42,55 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
   const [points, setPoints] = useState('10');
   const [malus, setMalus] = useState('0');
 
+  // Pre-fill form when quest changes
+  useEffect(() => {
+    if (quest) {
+      setSvgIcon(quest.svg_icon || '');
+      setTitle(quest.title || '');
+      setDescription(quest.description || '');
+      setCategoryId(quest.category_id || '');
+      setFrequencyName(quest.frequency || '');
+      setPoints(String(quest.points ?? 10));
+      setMalus(String(quest.malus ?? 0));
+    }
+  }, [quest]);
+
   const handleSubmit = async () => {
     if (!title || !categoryId || !frequencyName) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    createQuest.mutate(
+    if (!quest) return;
+
+    updateQuest.mutate(
       {
-        title,
-        description,
-        category_id: categoryId,
-        frequency: frequencyName,
-        points: parseInt(points) || 10,
-        malus: parseInt(malus) || 0,
-        is_active: true,
-        svg_icon: svgIcon || null,
+        id: quest.id,
+        data: {
+          title,
+          description,
+          category_id: categoryId,
+          frequency: frequencyName,
+          points: parseInt(points) || 10,
+          malus: parseInt(malus) || 0,
+          svg_icon: svgIcon || null,
+        },
       },
       {
         onSuccess: () => {
-          Alert.alert('Succès', 'Quête créée avec succès !');
-          resetForm();
+          Alert.alert('Succès', 'Quête modifiée avec succès !');
           onSuccess();
           onClose();
         },
         onError: (error: any) => {
-          Alert.alert('Erreur', error.message || 'Erreur lors de la création');
+          Alert.alert('Erreur', error.message || 'Erreur lors de la modification');
         },
       }
     );
   };
 
-  const resetForm = () => {
-    setSvgIcon(PRESET_EMOJIS[0]);
-    setTitle('');
-    setDescription('');
-    setCategoryId('');
-    setFrequencyName('');
-    setPoints('10');
-    setMalus('0');
-  };
-
   return (
-    <Modal visible={visible} onClose={onClose} title="Nouvelle quête">
+    <Modal visible={visible} onClose={onClose} title="Modifier la quête">
       <View style={styles.form}>
         {/* Emoji Selector */}
         <View style={styles.field}>
@@ -210,14 +218,14 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, createQuest.isPending && styles.submitButtonDisabled]}
+          style={[styles.submitButton, updateQuest.isPending && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={createQuest.isPending}
+          disabled={updateQuest.isPending}
           activeOpacity={0.7}>
-          {createQuest.isPending ? (
+          {updateQuest.isPending ? (
             <ActivityIndicator color={QuestifyColors.textPrimary} />
           ) : (
-            <Text style={styles.submitButtonText}>Créer la quête</Text>
+            <Text style={styles.submitButtonText}>Enregistrer les modifications</Text>
           )}
         </TouchableOpacity>
       </View>
