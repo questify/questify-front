@@ -59,10 +59,18 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
     const [isPositiveThingsEditable, setIsPositiveThingsEditable] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedFrequency, setSelectedFrequency] = useState<string | null>(null);
-    const [confirmationModal, setConfirmationModal] = useState<{ isOpen: boolean; questId: string | null; points: number }>({
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        questId: string | null;
+        questTitle: string;
+        points: number;
+        validationsToday: number;
+    }>({
         isOpen: false,
         questId: null,
+        questTitle: '',
         points: 0,
+        validationsToday: 0,
     });
 
     // Filter active quests only (not archived) and apply category/frequency filters
@@ -83,32 +91,48 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
         });
     }, [quests, selectedCategory, selectedFrequency]);
 
-    // Load existing data when available
+    // Load existing data when available — only if it's from TODAY
     useEffect(() => {
         if (existingMood && existingMood[0]?.mood_value) {
-            setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+            const moodDate = (existingMood[0]?.date || existingMood[0]?.created_at || '').split('T')[0];
+            if (moodDate === today) {
+                setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+            } else {
+                // Data is from a previous day — don't pre-fill
+                setSelectedMood(null);
+            }
         }
-    }, [existingMood]);
+    }, [existingMood, today]);
 
     useEffect(() => {
         if (existingPositiveThings && existingPositiveThings.length > 0) {
-            const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
-            setPositiveThings([
-                existingPositiveThings[0]?.thing_1 || '',
-                existingPositiveThings[0]?.thing_2 || '',
-                existingPositiveThings[0]?.thing_3 || '',
-            ]);
-            setIsPositiveThingsEditable(!hasData);
+            const ptDate = (existingPositiveThings[0]?.date || existingPositiveThings[0]?.created_at || '').split('T')[0];
+            if (ptDate === today) {
+                // It's today's data — display it
+                const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
+                setPositiveThings([
+                    existingPositiveThings[0]?.thing_1 || '',
+                    existingPositiveThings[0]?.thing_2 || '',
+                    existingPositiveThings[0]?.thing_3 || '',
+                ]);
+                setIsPositiveThingsEditable(!hasData);
+            } else {
+                // Data is from a previous day — show empty editable fields
+                setPositiveThings(['', '', '']);
+                setIsPositiveThingsEditable(true);
+            }
         } else {
             setIsPositiveThingsEditable(true);
         }
-    }, [existingPositiveThings]);
+    }, [existingPositiveThings, today]);
 
-    const openConfirmationModal = (questId: string, points: number) => {
+    const openConfirmationModal = (quest: Quest) => {
         setConfirmationModal({
             isOpen: true,
-            questId,
-            points,
+            questId: quest.id,
+            questTitle: quest.title,
+            points: quest.points,
+            validationsToday: quest.validations_today?.length || 0,
         });
     };
 
@@ -116,7 +140,9 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
         setConfirmationModal({
             isOpen: false,
             questId: null,
+            questTitle: '',
             points: 0,
+            validationsToday: 0,
         });
     };
 
@@ -465,6 +491,8 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {filteredQuests?.map((quest, index) => {
                                 const points = quest.points;
+                                const validationsCount = quest.validations_today?.length || 0;
+                                const alreadyValidated = validationsCount > 0;
 
                                 return (
                                     <div
@@ -475,11 +503,12 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                                             borderRadius: '12px',
                                             backgroundColor: 'white',
                                             border: '1px solid #E0E0E0',
+                                            borderLeft: alreadyValidated ? '4px solid #C8EAD3' : '1px solid #E0E0E0',
                                         }}
                                     >
                                         <div className="quest-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                             <div style={{ flex: 1 }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                     <span style={{ fontSize: '24px' }}>{quest.svg_icon || '🎯'}</span>
                                                     <div
                                                         className="badge"
@@ -494,6 +523,19 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                                                     >
                                                         {quest.category_name || 'Général'}
                                                     </div>
+                                                    {quest.frequency && (
+                                                        <div style={{
+                                                            padding: '4px 10px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '12px',
+                                                            fontWeight: 600,
+                                                            backgroundColor: '#F0EDFB',
+                                                            color: '#7B5CAA',
+                                                            border: '1px solid #D8CCF0',
+                                                        }}>
+                                                            {quest.frequency}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div style={{ fontWeight: 700, fontSize: '16px', marginTop: '8px' }}>
                                                     {quest.title || 'Objectif'}
@@ -501,24 +543,24 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', gap: '12px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                                 <span style={{ fontSize: '13px', color: '#6B6B6B' }}>
                                                     <span style={{ fontWeight: 700, color: '#F2B8A3' }}>+{points} pts</span>
                                                 </span>
-                                                {quest.validations_today && quest.validations_today.length > 0 && (
+                                                {alreadyValidated && (
                                                     <span style={{
                                                         backgroundColor: '#C8EAD3',
                                                         padding: '4px 12px',
                                                         borderRadius: '12px',
                                                         fontSize: '13px',
                                                         fontWeight: 600,
-                                                        color: '#1A1A1A',
+                                                        color: '#5BA073',
                                                     }}>
-                                                        ✓ {quest.validations_today.length}x validée{quest.validations_today.length > 1 ? 's' : ''}
+                                                        ✓ {validationsCount}× aujourd'hui
                                                     </span>
                                                 )}
                                             </div>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                                                 <button
                                                     className="btn btn-secondary"
                                                     onClick={() => onNavigateToQuests?.()}
@@ -536,20 +578,20 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                                                 </button>
                                                 <button
                                                     className="btn btn-primary"
-                                                    onClick={() => openConfirmationModal(quest.id, quest.points)}
-                                                    disabled={createValidation.isPending}
+                                                    onClick={() => openConfirmationModal(quest)}
+                                                    disabled={createValidation.isPending || alreadyValidated}
                                                     style={{
                                                         padding: '8px 16px',
                                                         borderRadius: '8px',
                                                         border: 'none',
-                                                        backgroundColor: '#C8EAD3',
-                                                        color: '#1A1A1A',
+                                                        backgroundColor: alreadyValidated ? '#C8EAD3' : '#C8B7E8',
+                                                        color: alreadyValidated ? '#5BA073' : '#1A1A1A',
                                                         fontWeight: 600,
-                                                        cursor: createValidation.isPending ? 'not-allowed' : 'pointer',
+                                                        cursor: (createValidation.isPending || alreadyValidated) ? 'not-allowed' : 'pointer',
                                                         opacity: createValidation.isPending ? 0.6 : 1,
                                                     }}
                                                 >
-                                                    ✓ Valider
+                                                    {alreadyValidated ? '✓ Validée' : '✓ Valider'}
                                                 </button>
                                             </div>
                                         </div>
@@ -566,6 +608,8 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                 isOpen={confirmationModal.isOpen}
                 points={confirmationModal.points}
                 isPending={createValidation.isPending}
+                questTitle={confirmationModal.questTitle}
+                validationsToday={confirmationModal.validationsToday}
                 onConfirm={confirmValidation}
                 onCancel={closeConfirmationModal}
             />

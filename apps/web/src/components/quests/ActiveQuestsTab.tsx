@@ -133,7 +133,7 @@ export function ActiveQuestsTab({
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                                         <span style={{ fontSize: '24px' }}>{quest.svg_icon || '🎯'}</span>
                                         <div
                                             className="badge"
@@ -148,6 +148,19 @@ export function ActiveQuestsTab({
                                         >
                                             {quest.category_name || 'Général'}
                                         </div>
+                                        {quest.frequency && (
+                                            <div style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '12px',
+                                                fontSize: '12px',
+                                                fontWeight: 600,
+                                                backgroundColor: '#F0EDFB',
+                                                color: '#7B5CAA',
+                                                border: '1px solid #D8CCF0',
+                                            }}>
+                                                {quest.frequency}
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px' }}>
                                         {quest.title}

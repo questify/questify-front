@@ -14,7 +14,8 @@ interface DayData {
     mood?: number;
 }
 
-function getCellColor(status: DayStatus): string {
+function getCellColor(status: DayStatus, isToday: boolean): string {
+    if (isToday) return '#C8B7E8';
     switch (status) {
         case 'completed': return '#C8EAD3';
         case 'partial':   return '#FFF4C1';
@@ -24,8 +25,8 @@ function getCellColor(status: DayStatus): string {
     }
 }
 
-function getCellBorder(date: string, today: string): string {
-    return date === today ? '2px solid #9B7DC8' : '1px solid rgba(0,0,0,0.06)';
+function getCellBorder(isToday: boolean): string {
+    return isToday ? '2px solid #9B7DC8' : '1px solid rgba(0,0,0,0.06)';
 }
 
 function moodEmoji(value: number): string {
@@ -42,14 +43,23 @@ export function YearlyBoard() {
         today.setHours(0, 0, 0, 0);
         const todayStr = today.toISOString().split('T')[0];
 
-        // Build validation map
-        const validationsByDate: Record<string, number> = {};
+        // Build validation map: count UNIQUE quest_ids per day
+        // (a quest can be validated multiple times — we only count it once per day)
+        const validationSetsByDate: Record<string, Set<string>> = {};
         if (data?.validations) {
             data.validations.forEach((v: any) => {
                 const d = (v.date || v.created_at || '').split('T')[0];
-                if (d) validationsByDate[d] = (validationsByDate[d] || 0) + 1;
+                if (!d) return;
+                if (!validationSetsByDate[d]) validationSetsByDate[d] = new Set();
+                const questKey = v.quest_id || v.id || String(Math.random());
+                validationSetsByDate[d].add(questKey);
             });
         }
+        // Convert sets to counts for easy lookup
+        const validationsByDate: Record<string, number> = {};
+        Object.entries(validationSetsByDate).forEach(([d, set]) => {
+            validationsByDate[d] = set.size;
+        });
 
         // Build mood map
         const moodsByDate: Record<string, number> = {};
@@ -62,7 +72,8 @@ export function YearlyBoard() {
 
         // Count active daily quests as reference for "total"
         const dailyQuestCount = data?.quests?.filter((q: any) => q.is_active && q.frequency === 'daily').length || 0;
-        const totalRef = Math.max(dailyQuestCount, 1);
+        // Don't force totalRef to 1 when there are no daily quests — keep it at 0
+        const totalRef = dailyQuestCount;
 
         // Start from 365 days ago (Monday of that week)
         const startDate = new Date(today);
@@ -89,7 +100,10 @@ export function YearlyBoard() {
                 let status: DayStatus = 'none';
                 if (!isFuture) {
                     const count = validationsByDate[dateStr] || 0;
-                    if (count === 0) {
+                    if (totalRef === 0) {
+                        // No daily quests configured: completed if any validation, missed otherwise
+                        status = count > 0 ? 'completed' : 'missed';
+                    } else if (count === 0) {
                         status = 'missed';
                     } else if (count >= totalRef) {
                         status = 'completed';
@@ -213,39 +227,42 @@ export function YearlyBoard() {
                             flexShrink: 0,
                         }}
                     >
-                        {week.map((day, di) => (
-                            <div
-                                key={di}
-                                style={{
-                                    width: `${CELL_SIZE}px`,
-                                    height: `${CELL_SIZE}px`,
-                                    borderRadius: '3px',
-                                    backgroundColor: getCellColor(day.status),
-                                    border: getCellBorder(day.date, today),
-                                    cursor: day.status !== 'future' && day.status !== 'none' ? 'pointer' : 'default',
-                                    position: 'relative',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '8px',
-                                    fontWeight: 700,
-                                    color: day.status === 'future' || day.status === 'none'
-                                        ? '#BBBBBB'
-                                        : day.date === today
-                                            ? '#9B7DC8'
-                                            : '#555555',
-                                    userSelect: 'none',
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (day.status === 'future') return;
-                                    const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                    setTooltip({ x: rect.left, y: rect.top, day });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                            >
-                                {day.dayNumber}
-                            </div>
-                        ))}
+                        {week.map((day, di) => {
+                            const isToday = day.date === today;
+                            return (
+                                <div
+                                    key={di}
+                                    style={{
+                                        width: `${CELL_SIZE}px`,
+                                        height: `${CELL_SIZE}px`,
+                                        borderRadius: '3px',
+                                        backgroundColor: getCellColor(day.status, isToday),
+                                        border: getCellBorder(isToday),
+                                        cursor: day.status !== 'future' && day.status !== 'none' ? 'pointer' : 'default',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '8px',
+                                        fontWeight: 700,
+                                        color: day.status === 'future' || day.status === 'none'
+                                            ? '#BBBBBB'
+                                            : isToday
+                                                ? '#5C3D8A'
+                                                : '#555555',
+                                        userSelect: 'none',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (day.status === 'future') return;
+                                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                        setTooltip({ x: rect.left, y: rect.top, day });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    {day.dayNumber}
+                                </div>
+                            );
+                        })}
                     </div>
                 ))}
             </div>
@@ -267,7 +284,7 @@ export function YearlyBoard() {
                             width: '12px',
                             height: '12px',
                             borderRadius: '2px',
-                            backgroundColor: getCellColor(s),
+                            backgroundColor: getCellColor(s, false),
                             border: '1px solid rgba(0,0,0,0.06)',
                         }} />
                         <span>
@@ -275,6 +292,16 @@ export function YearlyBoard() {
                         </span>
                     </div>
                 ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '2px',
+                        backgroundColor: '#C8B7E8',
+                        border: '2px solid #9B7DC8',
+                    }} />
+                    <span>Aujourd'hui</span>
+                </div>
                 <span>Plus</span>
             </div>
 

@@ -8,6 +8,7 @@ interface DayCell {
     dayName: string;
     dayNumber: number;
     status: 'completed' | 'partial' | 'missed' | 'today' | 'future';
+    isToday: boolean;
     mood?: string;
     validations?: number;
     totalQuests?: number;
@@ -60,17 +61,19 @@ export function BoardPage() {
         // Get active quests
         const activeQuests = data?.quests?.filter((q: any) => q.is_active) || [];
         const dailyQuests = activeQuests.filter((q: any) => q.frequency === 'daily');
-        const weeklyQuests = activeQuests.filter((q: any) => q.frequency === 'weekly');
 
-        // Build a map of validations by date
-        const validationsByDate: Record<string, any[]> = {};
+        // Build a map of UNIQUE quest_ids validated per date
+        // (one quest can be validated multiple times in a day — we count distinct quests)
+        const validationsByDate: Record<string, Set<string>> = {};
         if (data?.validations) {
             data.validations.forEach((validation: any) => {
                 const date = (validation.date || validation.created_at).split('T')[0];
                 if (!validationsByDate[date]) {
-                    validationsByDate[date] = [];
+                    validationsByDate[date] = new Set();
                 }
-                validationsByDate[date].push(validation);
+                // Use quest_id to deduplicate; fall back to a unique key if missing
+                const questKey = validation.quest_id || validation.id || String(Math.random());
+                validationsByDate[date].add(questKey);
             });
         }
 
@@ -87,7 +90,7 @@ export function BoardPage() {
             const currentDate = new Date(weekStart);
             currentDate.setDate(weekStart.getDate() + i);
             const dateStr = currentDate.toISOString().split('T')[0];
-            const dayValidations = validationsByDate[dateStr] || [];
+            const dayValidatedSet = validationsByDate[dateStr] || new Set<string>();
             const dayMood = moodsByDate[dateStr];
 
             const isFuture = currentDate > today;
@@ -95,22 +98,22 @@ export function BoardPage() {
 
             let status: DayCell['status'];
             let mood: string | undefined;
-            let validationCount = dayValidations.length;
+            // Count distinct quests validated that day
+            let validationCount = dayValidatedSet.size;
             let totalQuests = dailyQuests.length;
             let details: string | undefined;
 
             if (isFuture) {
                 status = 'future';
             } else if (isToday) {
+                // Today always stays 'today' for purple highlight
                 status = 'today';
-                if (validationCount === totalQuests && totalQuests > 0) {
-                    status = 'completed';
-                } else if (validationCount > 0) {
-                    status = 'partial';
-                }
             } else {
-                // Past day
-                if (validationCount === totalQuests && totalQuests > 0) {
+                // Past day — use distinct validated quests vs total daily quests
+                if (totalQuests === 0) {
+                    // No daily quests configured: missed if no validations, partial/completed otherwise
+                    status = validationCount > 0 ? 'completed' : 'missed';
+                } else if (validationCount >= totalQuests) {
                     status = 'completed';
                 } else if (validationCount > 0) {
                     status = 'partial';
@@ -144,6 +147,7 @@ export function BoardPage() {
                 dayName: dayNames[i],
                 dayNumber: currentDate.getDate(),
                 status,
+                isToday,
                 mood,
                 validations: validationCount,
                 totalQuests,
@@ -157,7 +161,12 @@ export function BoardPage() {
     // Calculate week stats
     const getWeekStats = (days: DayCell[]) => {
         const pastDays = days.filter(d => d.status !== 'future');
-        const completedDays = pastDays.filter(d => d.status === 'completed').length;
+        // Count today as completed if all quests done, partial if some done
+        const completedDays = pastDays.filter(d => {
+            if (d.status === 'completed') return true;
+            if (d.isToday && d.validations === d.totalQuests && (d.totalQuests || 0) > 0) return true;
+            return false;
+        }).length;
         const totalValidations = pastDays.reduce((sum, d) => sum + (d.validations || 0), 0);
         const totalPossible = pastDays.reduce((sum, d) => sum + (d.totalQuests || 0), 0);
         const successRate = totalPossible > 0 ? Math.round((totalValidations / totalPossible) * 100) : 0;
@@ -328,12 +337,12 @@ export function BoardPage() {
                                 padding: '24px',
                                 textAlign: 'center',
                                 backgroundColor:
+                                    day.isToday ? '#C8B7E8' :
                                     day.status === 'completed' ? '#C8EAD3' :
-                                    day.status === 'today' ? '#C8B7E8' :
                                     day.status === 'partial' ? '#FFF4C1' :
                                     day.status === 'missed' ? '#FFD1C1' :
                                     '#F9FAFB',
-                                border: day.status === 'today' ? '3px solid #9B7DC8' : undefined,
+                                border: day.isToday ? '3px solid #9B7DC8' : undefined,
                                 position: 'relative',
                                 minHeight: '180px',
                                 display: 'flex',
@@ -346,7 +355,7 @@ export function BoardPage() {
                                 <div style={{
                                     fontSize: '14px',
                                     fontWeight: 600,
-                                    color: '#6B6B6B',
+                                    color: day.isToday ? '#5C3D8A' : '#6B6B6B',
                                     marginBottom: '8px',
                                 }}>
                                     {day.dayName}
@@ -355,6 +364,7 @@ export function BoardPage() {
                                     fontSize: '32px',
                                     fontWeight: 700,
                                     marginBottom: '12px',
+                                    color: day.isToday ? '#3D2060' : '#1A1A1A',
                                 }}>
                                     {day.dayNumber}
                                 </div>
@@ -371,15 +381,16 @@ export function BoardPage() {
                                     fontSize: '14px',
                                     fontWeight: 600,
                                     marginTop: 'auto',
+                                    color: day.isToday ? '#5C3D8A' : '#1A1A1A',
                                 }}>
                                     {day.validations}/{day.totalQuests}
-                                    <div style={{ fontSize: '11px', fontWeight: 400, color: '#6B6B6B', marginTop: '4px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 400, color: day.isToday ? '#7B5CAA' : '#6B6B6B', marginTop: '4px' }}>
                                         quêtes
                                     </div>
                                 </div>
                             )}
 
-                            {day.status === 'today' && (
+                            {day.isToday && (
                                 <div style={{
                                     position: 'absolute',
                                     top: '8px',
