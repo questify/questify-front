@@ -142,12 +142,8 @@ export default function BoardScreen() {
       if (isFuture) {
         status = 'future';
       } else if (isToday) {
+        // Today always stays purple, regardless of quest completion
         status = 'today';
-        if (validationCount === totalQuests && totalQuests > 0) {
-          status = 'completed';
-        } else if (validationCount > 0) {
-          status = 'partial';
-        }
       } else {
         // Past day
         if (validationCount === totalQuests && totalQuests > 0) {
@@ -284,12 +280,8 @@ export default function BoardScreen() {
       if (isFuture) {
         status = 'future';
       } else if (isToday) {
+        // Today always stays purple, regardless of quest completion
         status = 'today';
-        if (validationCount === totalQuests && totalQuests > 0) {
-          status = 'completed';
-        } else if (validationCount > 0) {
-          status = 'partial';
-        }
       } else {
         // Past day
         if (validationCount === totalQuests && totalQuests > 0) {
@@ -420,12 +412,8 @@ export default function BoardScreen() {
       if (isFutureWeek) {
         status = 'future';
       } else if (isCurrentWeek) {
+        // Current week always stays highlighted, regardless of completion
         status = 'current';
-        if (totalPossible > 0 && totalValidations === totalPossible) {
-          status = 'completed';
-        } else if (totalValidations > 0) {
-          status = 'partial';
-        }
       } else {
         // Past week
         if (totalPossible > 0 && totalValidations === totalPossible) {
