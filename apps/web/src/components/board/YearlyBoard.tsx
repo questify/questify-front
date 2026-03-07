@@ -43,14 +43,23 @@ export function YearlyBoard() {
         today.setHours(0, 0, 0, 0);
         const todayStr = today.toISOString().split('T')[0];
 
-        // Build validation map
-        const validationsByDate: Record<string, number> = {};
+        // Build validation map: count UNIQUE quest_ids per day
+        // (a quest can be validated multiple times — we only count it once per day)
+        const validationSetsByDate: Record<string, Set<string>> = {};
         if (data?.validations) {
             data.validations.forEach((v: any) => {
                 const d = (v.date || v.created_at || '').split('T')[0];
-                if (d) validationsByDate[d] = (validationsByDate[d] || 0) + 1;
+                if (!d) return;
+                if (!validationSetsByDate[d]) validationSetsByDate[d] = new Set();
+                const questKey = v.quest_id || v.id || String(Math.random());
+                validationSetsByDate[d].add(questKey);
             });
         }
+        // Convert sets to counts for easy lookup
+        const validationsByDate: Record<string, number> = {};
+        Object.entries(validationSetsByDate).forEach(([d, set]) => {
+            validationsByDate[d] = set.size;
+        });
 
         // Build mood map
         const moodsByDate: Record<string, number> = {};
@@ -63,7 +72,8 @@ export function YearlyBoard() {
 
         // Count active daily quests as reference for "total"
         const dailyQuestCount = data?.quests?.filter((q: any) => q.is_active && q.frequency === 'daily').length || 0;
-        const totalRef = Math.max(dailyQuestCount, 1);
+        // Don't force totalRef to 1 when there are no daily quests — keep it at 0
+        const totalRef = dailyQuestCount;
 
         // Start from 365 days ago (Monday of that week)
         const startDate = new Date(today);
@@ -90,7 +100,10 @@ export function YearlyBoard() {
                 let status: DayStatus = 'none';
                 if (!isFuture) {
                     const count = validationsByDate[dateStr] || 0;
-                    if (count === 0) {
+                    if (totalRef === 0) {
+                        // No daily quests configured: completed if any validation, missed otherwise
+                        status = count > 0 ? 'completed' : 'missed';
+                    } else if (count === 0) {
                         status = 'missed';
                     } else if (count >= totalRef) {
                         status = 'completed';

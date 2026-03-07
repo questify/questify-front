@@ -62,15 +62,18 @@ export function BoardPage() {
         const activeQuests = data?.quests?.filter((q: any) => q.is_active) || [];
         const dailyQuests = activeQuests.filter((q: any) => q.frequency === 'daily');
 
-        // Build a map of validations by date
-        const validationsByDate: Record<string, any[]> = {};
+        // Build a map of UNIQUE quest_ids validated per date
+        // (one quest can be validated multiple times in a day — we count distinct quests)
+        const validationsByDate: Record<string, Set<string>> = {};
         if (data?.validations) {
             data.validations.forEach((validation: any) => {
                 const date = (validation.date || validation.created_at).split('T')[0];
                 if (!validationsByDate[date]) {
-                    validationsByDate[date] = [];
+                    validationsByDate[date] = new Set();
                 }
-                validationsByDate[date].push(validation);
+                // Use quest_id to deduplicate; fall back to a unique key if missing
+                const questKey = validation.quest_id || validation.id || String(Math.random());
+                validationsByDate[date].add(questKey);
             });
         }
 
@@ -87,7 +90,7 @@ export function BoardPage() {
             const currentDate = new Date(weekStart);
             currentDate.setDate(weekStart.getDate() + i);
             const dateStr = currentDate.toISOString().split('T')[0];
-            const dayValidations = validationsByDate[dateStr] || [];
+            const dayValidatedSet = validationsByDate[dateStr] || new Set<string>();
             const dayMood = moodsByDate[dateStr];
 
             const isFuture = currentDate > today;
@@ -95,7 +98,8 @@ export function BoardPage() {
 
             let status: DayCell['status'];
             let mood: string | undefined;
-            let validationCount = dayValidations.length;
+            // Count distinct quests validated that day
+            let validationCount = dayValidatedSet.size;
             let totalQuests = dailyQuests.length;
             let details: string | undefined;
 
@@ -105,8 +109,11 @@ export function BoardPage() {
                 // Today always stays 'today' for purple highlight
                 status = 'today';
             } else {
-                // Past day
-                if (validationCount === totalQuests && totalQuests > 0) {
+                // Past day — use distinct validated quests vs total daily quests
+                if (totalQuests === 0) {
+                    // No daily quests configured: missed if no validations, partial/completed otherwise
+                    status = validationCount > 0 ? 'completed' : 'missed';
+                } else if (validationCount >= totalQuests) {
                     status = 'completed';
                 } else if (validationCount > 0) {
                     status = 'partial';
