@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "d9b29b09-f456-46b2-955a-98341b17d577"
+      }
+    },
+    "owner": "camillelsch",
+    "ios": {
+      "bundleIdentifier": "com.camillelsch.questify",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

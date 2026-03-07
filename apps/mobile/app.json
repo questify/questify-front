@@ -1,14 +1,23 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "questify",
+    "slug": "questify",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
+    "extra": {
+      "eas": {
+        "projectId": "d9b29b09-f456-46b2-955a-98341b17d577"
+      }
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.questify.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
