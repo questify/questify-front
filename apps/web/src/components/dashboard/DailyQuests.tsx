@@ -91,26 +91,40 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
         });
     }, [quests, selectedCategory, selectedFrequency]);
 
-    // Load existing data when available
+    // Load existing data when available — only if it's from TODAY
     useEffect(() => {
         if (existingMood && existingMood[0]?.mood_value) {
-            setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+            const moodDate = (existingMood[0]?.date || existingMood[0]?.created_at || '').split('T')[0];
+            if (moodDate === today) {
+                setSelectedMood(valueToMood[existingMood[0].mood_value] || null);
+            } else {
+                // Data is from a previous day — don't pre-fill
+                setSelectedMood(null);
+            }
         }
-    }, [existingMood]);
+    }, [existingMood, today]);
 
     useEffect(() => {
         if (existingPositiveThings && existingPositiveThings.length > 0) {
-            const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
-            setPositiveThings([
-                existingPositiveThings[0]?.thing_1 || '',
-                existingPositiveThings[0]?.thing_2 || '',
-                existingPositiveThings[0]?.thing_3 || '',
-            ]);
-            setIsPositiveThingsEditable(!hasData);
+            const ptDate = (existingPositiveThings[0]?.date || existingPositiveThings[0]?.created_at || '').split('T')[0];
+            if (ptDate === today) {
+                // It's today's data — display it
+                const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
+                setPositiveThings([
+                    existingPositiveThings[0]?.thing_1 || '',
+                    existingPositiveThings[0]?.thing_2 || '',
+                    existingPositiveThings[0]?.thing_3 || '',
+                ]);
+                setIsPositiveThingsEditable(!hasData);
+            } else {
+                // Data is from a previous day — show empty editable fields
+                setPositiveThings(['', '', '']);
+                setIsPositiveThingsEditable(true);
+            }
         } else {
             setIsPositiveThingsEditable(true);
         }
-    }, [existingPositiveThings]);
+    }, [existingPositiveThings, today]);
 
     const openConfirmationModal = (quest: Quest) => {
         setConfirmationModal({
