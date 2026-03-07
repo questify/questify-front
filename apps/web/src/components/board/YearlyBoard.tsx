@@ -14,7 +14,8 @@ interface DayData {
     mood?: number;
 }
 
-function getCellColor(status: DayStatus): string {
+function getCellColor(status: DayStatus, isToday: boolean): string {
+    if (isToday) return '#C8B7E8';
     switch (status) {
         case 'completed': return '#C8EAD3';
         case 'partial':   return '#FFF4C1';
@@ -24,8 +25,8 @@ function getCellColor(status: DayStatus): string {
     }
 }
 
-function getCellBorder(date: string, today: string): string {
-    return date === today ? '2px solid #9B7DC8' : '1px solid rgba(0,0,0,0.06)';
+function getCellBorder(isToday: boolean): string {
+    return isToday ? '2px solid #9B7DC8' : '1px solid rgba(0,0,0,0.06)';
 }
 
 function moodEmoji(value: number): string {
@@ -213,39 +214,42 @@ export function YearlyBoard() {
                             flexShrink: 0,
                         }}
                     >
-                        {week.map((day, di) => (
-                            <div
-                                key={di}
-                                style={{
-                                    width: `${CELL_SIZE}px`,
-                                    height: `${CELL_SIZE}px`,
-                                    borderRadius: '3px',
-                                    backgroundColor: getCellColor(day.status),
-                                    border: getCellBorder(day.date, today),
-                                    cursor: day.status !== 'future' && day.status !== 'none' ? 'pointer' : 'default',
-                                    position: 'relative',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '8px',
-                                    fontWeight: 700,
-                                    color: day.status === 'future' || day.status === 'none'
-                                        ? '#BBBBBB'
-                                        : day.date === today
-                                            ? '#9B7DC8'
-                                            : '#555555',
-                                    userSelect: 'none',
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (day.status === 'future') return;
-                                    const rect = (e.target as HTMLElement).getBoundingClientRect();
-                                    setTooltip({ x: rect.left, y: rect.top, day });
-                                }}
-                                onMouseLeave={() => setTooltip(null)}
-                            >
-                                {day.dayNumber}
-                            </div>
-                        ))}
+                        {week.map((day, di) => {
+                            const isToday = day.date === today;
+                            return (
+                                <div
+                                    key={di}
+                                    style={{
+                                        width: `${CELL_SIZE}px`,
+                                        height: `${CELL_SIZE}px`,
+                                        borderRadius: '3px',
+                                        backgroundColor: getCellColor(day.status, isToday),
+                                        border: getCellBorder(isToday),
+                                        cursor: day.status !== 'future' && day.status !== 'none' ? 'pointer' : 'default',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '8px',
+                                        fontWeight: 700,
+                                        color: day.status === 'future' || day.status === 'none'
+                                            ? '#BBBBBB'
+                                            : isToday
+                                                ? '#5C3D8A'
+                                                : '#555555',
+                                        userSelect: 'none',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (day.status === 'future') return;
+                                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                                        setTooltip({ x: rect.left, y: rect.top, day });
+                                    }}
+                                    onMouseLeave={() => setTooltip(null)}
+                                >
+                                    {day.dayNumber}
+                                </div>
+                            );
+                        })}
                     </div>
                 ))}
             </div>
@@ -267,7 +271,7 @@ export function YearlyBoard() {
                             width: '12px',
                             height: '12px',
                             borderRadius: '2px',
-                            backgroundColor: getCellColor(s),
+                            backgroundColor: getCellColor(s, false),
                             border: '1px solid rgba(0,0,0,0.06)',
                         }} />
                         <span>
@@ -275,6 +279,16 @@ export function YearlyBoard() {
                         </span>
                     </div>
                 ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '2px',
+                        backgroundColor: '#C8B7E8',
+                        border: '2px solid #9B7DC8',
+                    }} />
+                    <span>Aujourd'hui</span>
+                </div>
                 <span>Plus</span>
             </div>
 

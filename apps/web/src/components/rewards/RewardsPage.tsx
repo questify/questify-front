@@ -16,7 +16,7 @@ export function RewardsPage() {
 
     const [activeTab, setActiveTab] = useState<TabType>('gifts');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [confirmPurchaseModal, setConfirmPurchaseModal] = useState<{isOpen: boolean; rewardId: string | null; cost: number; rewardTitle: string} | null>(null);
+    const [confirmPurchaseModal, setConfirmPurchaseModal] = useState<{isOpen: boolean; rewardId: string | null; cost: number; rewardTitle: string; rewardIcon: string} | null>(null);
 
     // Calculate user points (default to 0 if not available)
     const userPoints = user?.total_points || 0;
@@ -54,7 +54,7 @@ export function RewardsPage() {
             return;
         }
 
-        // Find reward title
+        // Find reward title and icon
         const reward = rewards?.find(r => r.id === rewardId);
 
         // Open confirmation modal
@@ -62,7 +62,8 @@ export function RewardsPage() {
             isOpen: true,
             rewardId,
             cost,
-            rewardTitle: reward?.title || 'cette récompense'
+            rewardTitle: reward?.title || 'cette récompense',
+            rewardIcon: reward?.svg_icon || '🎁',
         });
     };
 
@@ -445,7 +446,7 @@ export function RewardsPage() {
                 onClose={() => setIsCreateModalOpen(false)}
             />
 
-            {/* Confirmation Modal */}
+            {/* Confirmation Modal - redesigned */}
             {confirmPurchaseModal?.isOpen && (
                 <div
                     className="modal-overlay"
@@ -467,69 +468,104 @@ export function RewardsPage() {
                         className="modal"
                         style={{
                             backgroundColor: 'white',
-                            borderRadius: '16px',
-                            padding: '32px',
-                            maxWidth: '400px',
+                            borderRadius: '20px',
+                            padding: '0',
+                            maxWidth: '420px',
                             width: '90%',
-                            textAlign: 'center',
-                            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)'
+                            overflow: 'hidden',
+                            boxShadow: '0 8px 40px rgba(0, 0, 0, 0.18)',
                         }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎁</div>
-                        <h3 style={{ fontSize: '20px', marginBottom: '16px', fontWeight: 700 }}>
-                            Confirmer l'achat
-                        </h3>
-                        <p style={{ color: '#6B6B6B', marginBottom: '24px', fontSize: '15px' }}>
-                            Voulez-vous acheter <strong>{confirmPurchaseModal.rewardTitle}</strong> pour{' '}
-                            <strong style={{ color: '#C8B7E8' }}>{confirmPurchaseModal.cost} points</strong> ?
-                        </p>
+                        {/* Header gradient */}
                         <div style={{
-                            backgroundColor: '#F5F2FA',
-                            padding: '16px',
-                            borderRadius: '12px',
-                            marginBottom: '24px'
+                            background: 'linear-gradient(135deg, #F5F2FA 0%, #C8B7E8 100%)',
+                            padding: '28px 32px 24px',
+                            textAlign: 'center',
                         }}>
-                            <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '4px' }}>
-                                Points restants après achat
+                            <div style={{ fontSize: '56px', marginBottom: '8px' }}>
+                                {confirmPurchaseModal.rewardIcon}
                             </div>
-                            <div style={{ fontSize: '24px', fontWeight: 700, color: '#C8B7E8' }}>
-                                {(userPoints - confirmPurchaseModal.cost).toLocaleString()}
-                            </div>
+                            <h3 style={{ color: '#1A1A1A', fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                                {confirmPurchaseModal.rewardTitle}
+                            </h3>
                         </div>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <button
-                                onClick={() => setConfirmPurchaseModal(null)}
-                                style={{
-                                    flex: 1,
+
+                        {/* Body */}
+                        <div style={{ padding: '24px 32px 28px' }}>
+                            <p style={{ textAlign: 'center', color: '#6B6B6B', fontSize: '14px', marginBottom: '20px' }}>
+                                Tu es sur le point d'utiliser tes points pour t'offrir cette récompense 🎉
+                            </p>
+
+                            {/* Cost + remaining */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '12px',
+                                marginBottom: '24px',
+                            }}>
+                                <div style={{
+                                    backgroundColor: '#F5F2FA',
+                                    border: '2px solid #C8B7E8',
+                                    borderRadius: '12px',
                                     padding: '12px',
-                                    borderRadius: '8px',
-                                    border: '2px solid #E5E5E5',
-                                    backgroundColor: 'white',
-                                    color: '#1A1A1A',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                onClick={confirmPurchase}
-                                disabled={purchaseReward.isPending}
-                                style={{
-                                    flex: 1,
+                                    textAlign: 'center',
+                                }}>
+                                    <div style={{ fontSize: '11px', color: '#8F72C4', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' }}>Coût</div>
+                                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#9B7DC8' }}>
+                                        -{confirmPurchaseModal.cost} pts
+                                    </div>
+                                </div>
+                                <div style={{
+                                    backgroundColor: (userPoints - confirmPurchaseModal.cost) >= 0 ? '#F0FBF4' : '#FFF5F5',
+                                    border: `2px solid ${(userPoints - confirmPurchaseModal.cost) >= 0 ? '#C8EAD3' : '#FFD1C1'}`,
+                                    borderRadius: '12px',
                                     padding: '12px',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    backgroundColor: '#C8B7E8',
-                                    color: '#1A1A1A',
-                                    fontWeight: 600,
-                                    cursor: purchaseReward.isPending ? 'not-allowed' : 'pointer',
-                                    opacity: purchaseReward.isPending ? 0.6 : 1,
-                                }}
-                            >
-                                {purchaseReward.isPending ? 'Achat...' : 'Confirmer'}
-                            </button>
+                                    textAlign: 'center',
+                                }}>
+                                    <div style={{ fontSize: '11px', color: '#6B6B6B', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' }}>Restant</div>
+                                    <div style={{ fontSize: '20px', fontWeight: 700, color: (userPoints - confirmPurchaseModal.cost) >= 0 ? '#5BA073' : '#FF6B6B' }}>
+                                        {(userPoints - confirmPurchaseModal.cost).toLocaleString()} pts
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setConfirmPurchaseModal(null)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '13px',
+                                        borderRadius: '10px',
+                                        border: '2px solid #E5E5E5',
+                                        backgroundColor: 'white',
+                                        color: '#6B6B6B',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        fontSize: '15px',
+                                    }}
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={confirmPurchase}
+                                    disabled={purchaseReward.isPending}
+                                    style={{
+                                        flex: 2,
+                                        padding: '13px',
+                                        borderRadius: '10px',
+                                        border: 'none',
+                                        background: purchaseReward.isPending ? '#E0E0E0' : 'linear-gradient(135deg, #C8B7E8 0%, #9B7DC8 100%)',
+                                        color: purchaseReward.isPending ? '#A0A0A0' : 'white',
+                                        fontWeight: 700,
+                                        cursor: purchaseReward.isPending ? 'not-allowed' : 'pointer',
+                                        fontSize: '15px',
+                                        boxShadow: purchaseReward.isPending ? 'none' : '0 4px 12px rgba(155, 125, 200, 0.4)',
+                                    }}
+                                >
+                                    {purchaseReward.isPending ? 'Achat...' : '🎁 Confirmer l\'achat'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
