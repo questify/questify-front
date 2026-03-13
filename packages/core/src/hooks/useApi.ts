@@ -158,6 +158,16 @@ export function useUpdateQuest() {
     });
 }
 
+export function useEditQuest() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Partial<any> }) => api.quests.edit(id, data),
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.quests });
+        },
+    });
+}
+
 // ============= REWARDS =============
 
 export function useRewards() {
