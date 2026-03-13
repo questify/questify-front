@@ -1,7 +1,7 @@
 import '../styles/App.css'
 import React, {useState} from 'react';
 import {useAuth} from '@core/contexts/AuthContext';
-import {getAvatarUrl, isAvatarImage} from '@core/utils/avatar';
+import {getAvatarUrl, getAvatarBg, isAvatarImage} from '@core/utils/avatar';
 import {LoginForm} from '../components/auth/LoginForm';
 import {DashboardPage} from '../components/dashboard/DashboardPage';
 import {QuestsPage} from '../components/quests/QuestsPage';
@@ -14,6 +14,7 @@ function App() {
     const {user, isAuthenticated, isAuthReady, isUserReady, logout} = useAuth();
     const [activePage, setActivePage] = useState<string>('dashboard');
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
     const isLoading = !isAuthReady || !isUserReady;
 
@@ -49,20 +50,34 @@ function App() {
         setIsProfileOpen(prev => !prev);
     };
 
+    const nav = isSidebarCollapsed ? 'sidebar collapsed' : 'sidebar';
+    const topBarClass = isSidebarCollapsed ? 'top-bar sidebar-collapsed' : 'top-bar';
+    const contentClass = isSidebarCollapsed ? 'content sidebar-collapsed' : 'content';
+
+    const navItem = (page: string, icon: string, label: string) => (
+        <div className={`nav-item ${activePage === page ? 'active' : ''}`} onClick={() => showPage(page)} title={isSidebarCollapsed ? label : undefined}>
+            <span className="nav-icon">{icon}</span>
+            <span className="nav-label">{label}</span>
+        </div>
+    );
+
     return (
         <div className="container flex">
-            <div className="sidebar">
-                <div className="logo">QUESTIFY</div>
-                <div className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => showPage('dashboard')}>📊 Dashboard</div>
-                <div className={`nav-item ${activePage === 'quests' ? 'active' : ''}`} onClick={() => showPage('quests')}>🎯 Quêtes</div>
-                <div className={`nav-item ${activePage === 'plateau' ? 'active' : ''}`} onClick={() => showPage('plateau')}>🎲 Plateau</div>
-                <div className={`nav-item ${activePage === 'competition' ? 'active' : ''}`} onClick={() => showPage('competition')}>👥 Compétition</div>
-                <div className={`nav-item ${activePage === 'rewards' ? 'active' : ''}`} onClick={() => showPage('rewards')}>🎁 Récompenses</div>
-                <div className={`nav-item ${activePage === 'stats' ? 'active' : ''}`} onClick={() => showPage('stats')}>📈 Statistiques</div>
-                <div className={`nav-item ${activePage === 'settings' ? 'active' : ''}`} onClick={() => showPage('settings')}>⚙️ Paramètres</div>
+            <div className={nav}>
+                <div className="logo">{isSidebarCollapsed ? '🏆' : 'QUESTIFY'}</div>
+                {navItem('dashboard', '📊', 'Dashboard')}
+                {navItem('quests', '🎯', 'Quêtes')}
+                {navItem('plateau', '🎲', 'Plateau')}
+                {navItem('competition', '👥', 'Compétition')}
+                {navItem('rewards', '🎁', 'Récompenses')}
+                {navItem('stats', '📈', 'Statistiques')}
+                {navItem('settings', '⚙️', 'Paramètres')}
+                <button className="sidebar-toggle" onClick={() => setIsSidebarCollapsed(prev => !prev)} title={isSidebarCollapsed ? 'Déplier le menu' : 'Replier le menu'}>
+                    {isSidebarCollapsed ? '›' : '‹'}
+                </button>
             </div>
 
-            <div className="top-bar">
+            <div className={topBarClass}>
                 <div className="profile-menu">
                     <div className="profile-trigger" onClick={() => toggleProfileMenu()}>
                         {isAvatarImage(user?.avatar_url) ? (
@@ -78,7 +93,20 @@ function App() {
                                 }}
                             />
                         ) : (
-                            <div className="avatar-small">{user?.avatar_url || '👤'}</div>
+                            <div
+                                className="avatar-small"
+                                style={getAvatarBg(user?.avatar_url) ? {
+                                    backgroundColor: getAvatarBg(user?.avatar_url),
+                                    borderRadius: '50%',
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                } : undefined}
+                            >
+                                {getAvatarUrl(user?.avatar_url) || '👤'}
+                            </div>
                         )}
                         <div>
                             <div style={{fontWeight: 600, fontSize: '14px'}}>{user?.name}</div>
@@ -110,7 +138,7 @@ function App() {
                 </div>
             </div>
 
-            <div className="content">
+            <div className={contentClass}>
                 {activePage === 'dashboard' && <DashboardPage onNavigateTo={showPage} />}
                 {activePage === 'quests' && <QuestsPage />}
                 {activePage === 'plateau' && <BoardPage />}

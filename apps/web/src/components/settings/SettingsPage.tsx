@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { useAuth } from '@core/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { getAvatarUrl, getAvatarBg } from '@core/utils/avatar';
 
 const AVATAR_EMOJIS = [
-    '👤', '😃', '😁', '😊', '😇', '🙂', '🙃',
-    '😉', '😌', '😍', '🥰', '😘',
-    '😜', '🤪', '🤓', '😎',
+    // Visages
+    '👤', '😃', '😁', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍',
+    '🥰', '😘', '😎', '🤓', '🥸', '🤩', '😏', '😤', '🤗', '🫡',
+    '🧐', '🤔', '😜', '🤪', '😈', '👻', '🤖', '👽', '🥳', '🫠',
+    // Personnes
     '👨', '👩', '🧑', '👦', '👧', '🧒', '👶', '🧓', '👴', '👵',
+    '🧙', '🦸', '🧚', '🧜', '🧝', '👮', '🧑‍🚀', '🧑‍🎤', '🧑‍🍳', '🧑‍💻',
+    // Animaux
     '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
-    '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
-    '🦉', '🦅', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋',
+    '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🦆', '🦉',
+    '🦅', '🦇', '🐺', '🐴', '🦄', '🐝', '🦋', '🦖', '🐉', '🦊',
+    // Autres
+    '🌟', '⭐', '🔥', '💎', '🏆', '🎯', '🌈', '🚀', '💜', '🌸',
+];
+
+const AVATAR_BG_COLORS = [
+    '#C8B7E8', '#FFB7C5', '#B7D7FF', '#B7E8C5', '#FFD9A0', '#FFE8A0',
+    '#FFB7B7', '#B7C5F0', '#A0E8E8', '#E8B7D4', '#D4E8A0', '#F0C5A0',
+    '#1A1A1A', '#4A4A8A', '#2D7D4F', '#8A4A2D', '#FFFFFF', '#E5E5E5',
 ];
 
 export function SettingsPage() {
@@ -23,18 +36,14 @@ export function SettingsPage() {
     // Profile form state
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
-    const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '👤');
+    const [avatarEmoji, setAvatarEmoji] = useState(() => getAvatarUrl(user?.avatar_url) || '👤');
+    const [avatarBg, setAvatarBg] = useState(() => getAvatarBg(user?.avatar_url) || '');
     const [startDate, setStartDate] = useState(user?.start_date || '');
 
-    // Helper to get full avatar URL
-    const getAvatarUrl = (url: string | undefined): string => {
-        if (!url) return '👤';
-        if (url.startsWith('http')) return url;
-        if (url.startsWith('/')) {
-            return `http://192.168.1.32:3000${url}`;
-        }
-        return url;
-    };
+    // Derive combined avatar_url for API
+    const avatarUrl = avatarEmoji && !avatarEmoji.startsWith('http') && !avatarEmoji.startsWith('/')
+        ? (avatarBg ? `${avatarEmoji}|${avatarBg}` : avatarEmoji)
+        : avatarEmoji;
 
     // Password form state
     const [currentPassword, setCurrentPassword] = useState('');
@@ -58,7 +67,6 @@ export function SettingsPage() {
             toast.success('Profil mis à jour avec succès');
             setIsEditingProfile(false);
         } catch (error) {
-            console.error('Failed to update profile:', error);
             toast.error('Erreur lors de la mise à jour du profil');
         }
     };
@@ -89,7 +97,6 @@ export function SettingsPage() {
             setNewPassword('');
             setConfirmPassword('');
         } catch (error) {
-            console.error('Failed to change password:', error);
             toast.error('Erreur lors du changement de mot de passe');
         }
     };
@@ -97,7 +104,8 @@ export function SettingsPage() {
     const handleCancelProfile = () => {
         setName(user?.name || '');
         setEmail(user?.email || '');
-        setAvatarUrl(user?.avatar_url || '');
+        setAvatarEmoji(getAvatarUrl(user?.avatar_url) || '👤');
+        setAvatarBg(getAvatarBg(user?.avatar_url) || '');
         setStartDate(user?.start_date || '');
         setIsEditingProfile(false);
     };
@@ -130,11 +138,11 @@ export function SettingsPage() {
             const { api } = await import('@core/services/api');
             const result = await api.users.uploadAvatar(file);
 
-            // Update avatar URL with server URL
-            setAvatarUrl(result.avatar_url);
+            // Update avatar URL with server URL (image upload clears bg color)
+            setAvatarEmoji(result.avatar_url);
+            setAvatarBg('');
             toast.success('Avatar uploadé avec succès');
         } catch (error) {
-            console.error('Failed to upload avatar:', error);
             toast.error('Erreur lors de l\'upload de l\'avatar');
         } finally {
             setIsUploadingAvatar(false);
@@ -183,7 +191,7 @@ export function SettingsPage() {
                         </div>
                         <div style={{ marginBottom: '16px' }}>
                             <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '4px' }}>Avatar</div>
-                            {user?.avatar_url && user.avatar_url.startsWith('/') ? (
+                            {user?.avatar_url && (user.avatar_url.startsWith('/') || user.avatar_url.startsWith('http')) ? (
                                 <img
                                     src={getAvatarUrl(user.avatar_url)}
                                     alt="Avatar"
@@ -195,8 +203,17 @@ export function SettingsPage() {
                                     }}
                                 />
                             ) : (
-                                <div style={{ fontSize: '32px' }}>
-                                    {user?.avatar_url || '👤'}
+                                <div style={{
+                                    fontSize: '36px',
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: getAvatarBg(user?.avatar_url) || 'transparent',
+                                }}>
+                                    {getAvatarUrl(user?.avatar_url) || '👤'}
                                 </div>
                             )}
                         </div>
@@ -243,112 +260,119 @@ export function SettingsPage() {
                         </div>
                         <div className="form-group" style={{ marginBottom: '16px' }}>
                             <label>Avatar</label>
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-                                {avatarUrl && avatarUrl.startsWith('/') ? (
+                            {/* Preview */}
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
+                                {avatarEmoji && (avatarEmoji.startsWith('/') || avatarEmoji.startsWith('http')) ? (
                                     <img
-                                        src={getAvatarUrl(avatarUrl)}
+                                        src={avatarEmoji}
                                         alt="Avatar"
-                                        style={{
-                                            width: '64px',
-                                            height: '64px',
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            border: '2px solid #E5E5E5',
-                                        }}
+                                        style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E5E5E5' }}
                                     />
                                 ) : (
                                     <div style={{
-                                        fontSize: '48px',
+                                        fontSize: '36px',
                                         width: '64px',
                                         height: '64px',
+                                        borderRadius: '50%',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        backgroundColor: avatarBg || '#F0F0F0',
+                                        border: '2px solid #E5E5E5',
+                                        flexShrink: 0,
                                     }}>
-                                        {avatarUrl || '👤'}
+                                        {avatarEmoji || '👤'}
                                     </div>
                                 )}
                                 <div style={{ flex: 1 }}>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleAvatarUpload}
-                                        accept="image/*"
-                                        style={{ display: 'none' }}
-                                    />
+                                    <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} accept="image/*" style={{ display: 'none' }} />
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isUploadingAvatar}
-                                        style={{
-                                            padding: '10px 20px',
-                                            borderRadius: '8px',
-                                            border: '2px solid #E5E5E5',
-                                            backgroundColor: 'white',
-                                            color: '#1A1A1A',
-                                            fontWeight: 600,
-                                            cursor: 'pointer',
-                                            marginRight: '8px',
-                                        }}
+                                        style={{ padding: '10px 16px', borderRadius: '8px', border: '2px solid #E5E5E5', backgroundColor: 'white', color: '#1A1A1A', fontWeight: 600, cursor: 'pointer', marginRight: '8px', fontSize: '13px' }}
                                     >
-                                        {isUploadingAvatar ? '📤 Upload...' : '📤 Uploader une image'}
+                                        {isUploadingAvatar ? '📤 Upload...' : '📤 Image'}
                                     </button>
                                     <button
                                         onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                                        style={{
-                                            padding: '10px 20px',
-                                            borderRadius: '8px',
-                                            border: '2px solid #E5E5E5',
-                                            backgroundColor: 'white',
-                                            color: '#1A1A1A',
-                                            fontWeight: 600,
-                                            cursor: 'pointer',
-                                        }}
+                                        style={{ padding: '10px 16px', borderRadius: '8px', border: '2px solid #E5E5E5', backgroundColor: 'white', color: '#1A1A1A', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
                                     >
-                                        😊 Choisir un emoji
+                                        😊 Emoji
                                     </button>
                                 </div>
                             </div>
-                            <div style={{ position: 'relative' }}>
-                                {isEmojiPickerOpen && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '100%',
-                                        left: 0,
-                                        right: 0,
-                                        marginTop: '8px',
-                                        padding: '12px',
-                                        backgroundColor: 'white',
-                                        border: '2px solid #E5E5E5',
-                                        borderRadius: '10px',
-                                        maxHeight: '200px',
-                                        overflowY: 'auto',
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(10, 1fr)',
-                                        gap: '8px',
-                                        zIndex: 1000,
-                                    }}>
-                                        {AVATAR_EMOJIS.map((emoji) => (
-                                            <div
-                                                key={emoji}
-                                                onClick={() => {
-                                                    setAvatarUrl(emoji);
-                                                    setIsEmojiPickerOpen(false);
-                                                }}
-                                                style={{
-                                                    fontSize: '24px',
-                                                    cursor: 'pointer',
-                                                    textAlign: 'center',
-                                                    padding: '4px',
-                                                    borderRadius: '4px',
-                                                    backgroundColor: avatarUrl === emoji ? '#C8B7E8' : 'transparent',
-                                                }}
-                                            >
-                                                {emoji}
-                                            </div>
-                                        ))}
+
+                            {/* Emoji picker */}
+                            {isEmojiPickerOpen && (
+                                <div style={{
+                                    padding: '12px',
+                                    backgroundColor: 'white',
+                                    border: '2px solid #E5E5E5',
+                                    borderRadius: '10px',
+                                    maxHeight: '220px',
+                                    overflowY: 'auto',
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(10, 1fr)',
+                                    gap: '6px',
+                                    marginBottom: '12px',
+                                }}>
+                                    {AVATAR_EMOJIS.map((emoji) => (
+                                        <div
+                                            key={emoji}
+                                            onClick={() => { setAvatarEmoji(emoji); setIsEmojiPickerOpen(false); }}
+                                            style={{
+                                                fontSize: '22px',
+                                                cursor: 'pointer',
+                                                textAlign: 'center',
+                                                padding: '4px',
+                                                borderRadius: '6px',
+                                                backgroundColor: avatarEmoji === emoji ? '#C8B7E8' : 'transparent',
+                                            }}
+                                        >
+                                            {emoji}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Background color picker (only for emoji avatars) */}
+                            {!(avatarEmoji?.startsWith('/') || avatarEmoji?.startsWith('http')) && (
+                                <div>
+                                    <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '8px', fontWeight: 500 }}>
+                                        Couleur de fond
                                     </div>
-                                )}
-                            </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                        {AVATAR_BG_COLORS.map((color) => (
+                                            <button
+                                                key={color}
+                                                type="button"
+                                                onClick={() => setAvatarBg(avatarBg === color ? '' : color)}
+                                                style={{
+                                                    width: '28px',
+                                                    height: '28px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: color,
+                                                    border: avatarBg === color ? '3px solid #1A1A1A' : '2px solid #E5E5E5',
+                                                    cursor: 'pointer',
+                                                    boxShadow: avatarBg === color ? '0 0 0 2px white inset' : 'none',
+                                                    flexShrink: 0,
+                                                    transition: 'all 0.15s',
+                                                }}
+                                                title={color}
+                                            />
+                                        ))}
+                                        {avatarBg && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setAvatarBg('')}
+                                                style={{ fontSize: '11px', color: '#6B6B6B', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                                            >
+                                                Aucune
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="form-group" style={{ marginBottom: '24px' }}>
                             <label>Date de début du challenge</label>

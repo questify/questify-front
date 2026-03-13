@@ -58,6 +58,7 @@ export interface Quest {
   points: number;
   malus: number;
   svg_icon: string | null;
+  category_id: string;
   category_name: string;
   category_color: string;
   frequency: string;

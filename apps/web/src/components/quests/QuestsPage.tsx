@@ -51,7 +51,6 @@ export function QuestsPage() {
         const { questId, points } = confirmationModal;
 
         if (!questId || !user?.id) {
-            console.error('Missing quest ID or user ID');
             return;
         }
 
@@ -77,7 +76,6 @@ export function QuestsPage() {
                             const updatedUser = await api.users.getMe();
                             updateUser(updatedUser);
                         } catch (error) {
-                            console.error('Failed to fetch updated user:', error);
                         }
                     }
 
@@ -85,7 +83,6 @@ export function QuestsPage() {
                     closeConfirmationModal();
                 },
                 onError: (error) => {
-                    console.error('Failed to validate quest:', error);
                     alert('Erreur lors de la validation de la quête');
                     closeConfirmationModal();
                 }
@@ -101,7 +98,6 @@ export function QuestsPage() {
             },
             {
                 onError: (error) => {
-                    console.error('Failed to update quest:', error);
                     alert('Erreur lors de la mise à jour de la quête');
                 }
             }

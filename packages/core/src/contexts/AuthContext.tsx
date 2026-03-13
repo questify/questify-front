@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(me);
             } catch (e) {
                 // Token invalide/expiré => on nettoie
-                console.log("🔐 Failed to load user, clearing token", e);
                 await clearToken();
                 setToken(null);
                 setUser(null);
@@ -107,7 +106,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await api.auth.login({ email, password });
             await loginWithToken(response.token);
         } catch (error) {
-            console.error('Login error:', error);
             throw error;
         }
     };
@@ -117,7 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await api.auth.register({ name, email, password });
             await loginWithToken(response.token);
         } catch (error) {
-            console.error('Register error:', error);
             throw error;
         }
     };

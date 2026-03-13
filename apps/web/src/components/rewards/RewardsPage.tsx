@@ -82,7 +82,6 @@ export function RewardsPage() {
                         const updatedUser = await api.users.getMe();
                         updateUser(updatedUser);
                     } catch (error) {
-                        console.error('Failed to fetch updated user:', error);
                     }
                 }
                 toast.success('Récompense achetée avec succès !', {
@@ -92,7 +91,6 @@ export function RewardsPage() {
                 setConfirmPurchaseModal(null);
             },
             onError: (error) => {
-                console.error('Failed to purchase reward:', error);
                 toast.error('Erreur lors de l\'achat de la récompense');
                 setConfirmPurchaseModal(null);
             }

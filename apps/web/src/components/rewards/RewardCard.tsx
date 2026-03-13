@@ -42,7 +42,6 @@ export function RewardCard({ reward, userPoints, isPurchasing, onPurchase }: Rew
                     setIsEditing(false);
                 },
                 onError: (error) => {
-                    console.error('Failed to update reward:', error);
                     alert('Erreur lors de la mise à jour de la récompense');
                 }
             }
@@ -65,7 +64,6 @@ export function RewardCard({ reward, userPoints, isPurchasing, onPurchase }: Rew
         }
         deleteReward.mutate(reward.id, {
             onError: (error) => {
-                console.error('Failed to delete reward:', error);
                 alert('Erreur lors de la suppression de la récompense');
             }
         });

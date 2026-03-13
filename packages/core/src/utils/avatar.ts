@@ -3,13 +3,14 @@ import { getApiConfig } from "../types/api";
 /**
  * Get the full URL for an avatar
  * Handles emojis, relative URLs, and absolute URLs
+ * Also handles "emoji|color" format
  */
 export function getAvatarUrl(avatarUrl: string | undefined): string {
     if (!avatarUrl) return '👤';
 
-    // If it's an emoji (single character or common emoji patterns)
-    if (avatarUrl.length <= 2 || /^[\u{1F300}-\u{1F9FF}]$/u.test(avatarUrl)) {
-        return avatarUrl;
+    // Handle "emoji|color" format — return just the emoji part
+    if (avatarUrl.includes('|') && !avatarUrl.startsWith('http')) {
+        return avatarUrl.split('|')[0];
     }
 
     // If it's already an absolute URL
@@ -23,8 +24,18 @@ export function getAvatarUrl(avatarUrl: string | undefined): string {
         return `${baseUrl}${avatarUrl}`;
     }
 
-    // Default: return as-is
+    // Emoji or other string
     return avatarUrl;
+}
+
+/**
+ * Extract the background color from an "emoji|color" avatar_url.
+ * Returns undefined if no color is set.
+ */
+export function getAvatarBg(avatarUrl: string | undefined): string | undefined {
+    if (!avatarUrl || avatarUrl.startsWith('http') || avatarUrl.startsWith('/')) return undefined;
+    if (avatarUrl.includes('|')) return avatarUrl.split('|')[1];
+    return undefined;
 }
 
 /**

@@ -153,7 +153,6 @@ export function CompetitionPage() {
 
             setActiveTab('team');
         } catch (error) {
-            console.error('Error saving team:', error);
             alert('Erreur lors de la sauvegarde de l\'équipe');
         }
     };
@@ -169,7 +168,6 @@ export function CompetitionPage() {
                 setSelectedUserIds([]);
                 setActiveTab('team');
             } catch (error) {
-                console.error('Error deleting team:', error);
                 alert('Erreur lors de la suppression de l\'équipe');
             }
         }

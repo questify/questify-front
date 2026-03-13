@@ -21,6 +21,21 @@ const PRESET_CATEGORY_EMOJIS = [
     '💰', '🧩', '📝', '🔑', '🛡️', '💡', '⚙️', '📅',
 ];
 
+const PRESET_COLORS = [
+    '#C8B7E8', // lavande (défaut)
+    '#FFB7C5', // rose
+    '#B7D7FF', // bleu ciel
+    '#B7E8C5', // vert menthe
+    '#FFD9A0', // orange
+    '#FFE8A0', // jaune
+    '#FFB7B7', // corail
+    '#B7C5F0', // pervenche
+    '#D4E8A0', // citron vert
+    '#A0E8E8', // turquoise
+    '#F0C5A0', // sable
+    '#E8B7D4', // mauve
+];
+
 export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProps) {
     const createCategory = useCreateCategory();
 
@@ -53,8 +68,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                 color: '#C8B7E8',
             });
             onClose();
-        } catch (error) {
-            console.error('Failed to create category:', error);
+        } catch {
             alert('Erreur lors de la création de la catégorie');
         }
     };
@@ -162,36 +176,26 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
                             Couleur
                         </label>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <input
-                                type="color"
-                                value={formData.color}
-                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                style={{
-                                    width: '60px',
-                                    height: '40px',
-                                    border: '2px solid #E5E5E5',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                }}
-                            />
-                            <input
-                                type="text"
-                                value={formData.color}
-                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                placeholder="#C8B7E8"
-                                style={{
-                                    flex: 1,
-                                    padding: '12px',
-                                    border: '2px solid #E5E5E5',
-                                    borderRadius: '10px',
-                                    fontSize: '14px',
-                                }}
-                            />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+                            {PRESET_COLORS.map((color) => (
+                                <button
+                                    key={color}
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, color })}
+                                    style={{
+                                        width: '100%',
+                                        aspectRatio: '1',
+                                        borderRadius: '50%',
+                                        backgroundColor: color,
+                                        border: formData.color === color ? '3px solid #1A1A1A' : '3px solid transparent',
+                                        cursor: 'pointer',
+                                        boxShadow: formData.color === color ? '0 0 0 2px white inset' : 'none',
+                                        transition: 'all 0.15s',
+                                    }}
+                                    title={color}
+                                />
+                            ))}
                         </div>
-                        <small style={{ fontSize: '12px', color: '#6B6B6B', marginTop: '4px', display: 'block' }}>
-                            Couleur d'affichage pour cette catégorie
-                        </small>
                     </div>
 
                     {/* Buttons */}

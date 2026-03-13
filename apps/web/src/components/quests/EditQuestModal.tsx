@@ -64,6 +64,7 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
                     title: formData.title,
                     description: formData.description || null,
                     category_id: formData.category_id,
+                    is_active: quest.is_active,
                     is_private: formData.is_private,
                     frequency: formData.frequency,
                     points: formData.points,
@@ -73,7 +74,6 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
             });
             onClose();
         } catch (error) {
-            console.error('Failed to update quest:', error);
             alert('Erreur lors de la mise à jour de la quête');
         }
     };
@@ -268,6 +268,27 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
                                 fontSize: '14px',
                             }}
                         />
+                    </div>
+
+                    {/* Visibilité */}
+                    <div className="form-group" style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+                            Visibilité
+                        </label>
+                        <select
+                            value={String(formData.is_private)}
+                            onChange={(e) => setFormData({ ...formData, is_private: e.target.value === 'true' })}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                border: '2px solid #E5E5E5',
+                                borderRadius: '10px',
+                                fontSize: '14px',
+                            }}
+                        >
+                            <option value="false">Publique</option>
+                            <option value="true">Privée</option>
+                        </select>
                     </div>
 
                     {/* Malus */}
