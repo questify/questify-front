@@ -6,6 +6,17 @@ interface CreateQuestModalProps {
     onClose: () => void;
 }
 
+const QUEST_TEMPLATES = [
+    { svg_icon: '🏃', title: 'Course à pied 30 min', description: 'Courir pendant au moins 30 minutes', frequency: 'daily' as const, points: 50, malus: 10 },
+    { svg_icon: '💧', title: 'Boire 2L d\'eau', description: '', frequency: 'daily' as const, points: 20, malus: 5 },
+    { svg_icon: '📚', title: 'Lecture 20 min', description: 'Lire un livre ou un article', frequency: 'daily' as const, points: 30, malus: 0 },
+    { svg_icon: '🧘', title: 'Méditation 10 min', description: '10 minutes de pleine conscience', frequency: 'daily' as const, points: 25, malus: 0 },
+    { svg_icon: '💪', title: 'Séance de sport', description: 'Entraînement ou renforcement musculaire', frequency: 'weekly' as const, points: 80, malus: 20 },
+    { svg_icon: '🥗', title: 'Repas équilibré', description: 'Manger un repas sain et équilibré', frequency: 'daily' as const, points: 15, malus: 5 },
+    { svg_icon: '😴', title: 'Dormir 8h', description: 'Aller au lit avant 23h', frequency: 'daily' as const, points: 30, malus: 10 },
+    { svg_icon: '📝', title: 'Journaling', description: 'Écrire dans son journal', frequency: 'daily' as const, points: 20, malus: 0 },
+];
+
 const PRESET_EMOJIS = [
     // Sport & santé
     '🏃', '💪', '🧘', '🚴', '🏋️', '🏊', '⚽', '🎯',
@@ -72,7 +83,6 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
             });
             onClose();
         } catch (error) {
-            console.error('Failed to create quest:', error);
             alert('Erreur lors de la création de la quête');
         }
     };
@@ -109,7 +119,51 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 700 }}>Nouvelle quête</h2>
+                <h2 style={{ marginBottom: '16px', fontSize: '24px', fontWeight: 700 }}>Nouvelle quête</h2>
+
+                {/* Templates */}
+                <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '10px', fontWeight: 600 }}>
+                        ⚡ Suggestions rapides
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                        {QUEST_TEMPLATES.map((tpl, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                    ...prev,
+                                    svg_icon: tpl.svg_icon,
+                                    title: tpl.title,
+                                    description: tpl.description,
+                                    frequency: tpl.frequency,
+                                    points: tpl.points,
+                                    malus: tpl.malus,
+                                }))}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 12px',
+                                    border: '2px solid #E5E5E5',
+                                    borderRadius: '10px',
+                                    backgroundColor: 'white',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8B7E8'; e.currentTarget.style.backgroundColor = '#F5F0FF'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E5E5E5'; e.currentTarget.style.backgroundColor = 'white'; }}
+                            >
+                                <span style={{ fontSize: '20px' }}>{tpl.svg_icon}</span>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>{tpl.title}</div>
+                                    <div style={{ fontSize: '11px', color: '#9B9B9B' }}>{tpl.frequency} · {tpl.points} pts</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit}>
                     {/* Emoji */}
@@ -258,11 +312,11 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                             Niveau de visibilité *
                         </label>
                         <select
-                            value={formData.is_private as unknown as string}
+                            value={String(formData.is_private)}
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    is_private: e.target.value as unknown as true | false,
+                                    is_private: e.target.value === 'true',
                                 })
                             }
                             required
@@ -274,10 +328,8 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                                 fontSize: '14px',
                             }}
                         >
-                            <option value="">Sélectionner un niveau de visibilité</option>
-
-                                <option key='publique' value={'true'}>Publique</option>
-                                <option key='privé' value={'true'}>Privée</option>
+                            <option value="false">Publique</option>
+                            <option value="true">Privée</option>
                         </select>
                     </div>
 

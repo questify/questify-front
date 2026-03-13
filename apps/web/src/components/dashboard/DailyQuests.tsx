@@ -149,7 +149,6 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
     const confirmValidation = async () => {
         const { questId, points } = confirmationModal;
         if (!questId || !user?.id) {
-            console.error('Missing quest ID or user ID');
             return;
         }
         createValidation.mutate(
@@ -175,8 +174,8 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                             const { api } = await import('@core/services/api');
                             const updatedUser = await api.users.getMe();
                             updateUser(updatedUser);
-                        } catch (error) {
-                            console.error('Failed to fetch updated user:', error);
+                        } catch {
+                            // Silently ignore — user data will refresh on next query
                         }
                     }
                 },

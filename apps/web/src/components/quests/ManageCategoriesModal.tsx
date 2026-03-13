@@ -7,6 +7,11 @@ interface ManageCategoriesModalProps {
     onClose: () => void;
 }
 
+const PRESET_COLORS = [
+    '#C8B7E8', '#FFB7C5', '#B7D7FF', '#B7E8C5', '#FFD9A0', '#FFE8A0',
+    '#FFB7B7', '#B7C5F0', '#A0E8E8', '#E8B7D4', '#D4E8A0', '#F0C5A0',
+];
+
 export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModalProps) {
     const { data: categories } = useCategories();
     const createCategory = useCreateCategory();
@@ -43,7 +48,6 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
             });
             setIsCreating(false);
         } catch (error) {
-            console.error('Failed to create category:', error);
         }
     };
 
@@ -81,7 +85,6 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
             });
             setEditingId(null);
         } catch (error) {
-            console.error('Failed to update category:', error);
         }
     };
 
@@ -89,7 +92,6 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
         try {
             await deleteCategory.mutateAsync(id);
         } catch (error) {
-            console.error('Failed to delete category:', error);
         }
     };
 
@@ -190,18 +192,21 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
                                                 fontSize: '14px',
                                             }}
                                         />
-                                        <input
-                                            type="color"
-                                            value={formData.color}
-                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                            style={{
-                                                width: '40px',
-                                                height: '36px',
-                                                border: '1px solid #E5E5E5',
-                                                borderRadius: '6px',
-                                                cursor: 'pointer',
-                                            }}
-                                        />
+                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '140px' }}>
+                                            {PRESET_COLORS.map((color) => (
+                                                <button
+                                                    key={color}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, color })}
+                                                    style={{
+                                                        width: '20px', height: '20px', borderRadius: '50%',
+                                                        backgroundColor: color,
+                                                        border: formData.color === color ? '2px solid #1A1A1A' : '1px solid #E5E5E5',
+                                                        cursor: 'pointer', padding: 0, flexShrink: 0,
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
                                         <button
                                             type="submit"
                                             disabled={updateCategory.isPending}
@@ -351,18 +356,25 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
                                         fontSize: '14px',
                                     }}
                                 />
-                                <input
-                                    type="color"
-                                    value={formData.color}
-                                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                                    style={{
-                                        width: '50px',
-                                        height: '46px',
-                                        border: '2px solid #E5E5E5',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                    }}
-                                />
+                            </div>
+                            <div style={{ marginTop: '10px' }}>
+                                <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '8px', fontWeight: 500 }}>Couleur</div>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {PRESET_COLORS.map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, color })}
+                                            style={{
+                                                width: '28px', height: '28px', borderRadius: '50%',
+                                                backgroundColor: color,
+                                                border: formData.color === color ? '3px solid #1A1A1A' : '2px solid #E5E5E5',
+                                                cursor: 'pointer', padding: 0,
+                                                boxShadow: formData.color === color ? '0 0 0 2px white inset' : 'none',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>

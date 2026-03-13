@@ -15,11 +15,11 @@ import { useAuth } from '@/core/contexts/AuthContext';
 import {
   useQuests,
   useDailyOverview,
-    useCreateValidation,
-    useCreateOrUpdateDailyMood,
-    useCreateOrUpdatePositiveThings,
-    useDailyMoodHistory,
-    usePositiveThingsHistory,
+  useCreateValidation,
+  useCreateOrUpdateDailyMood,
+  useCreateOrUpdatePositiveThings,
+  useDailyMoodHistory,
+  usePositiveThingsHistory,
 } from '@/core/hooks/useApi';
 import { QuestifyColors } from '@/mobile/constants/colors';
 import { Card } from '@/mobile/components/ui/Card';
@@ -45,11 +45,10 @@ const valueToMood: Record<number, Mood> = {
 
 export default function DashboardScreen() {
   const { user, refreshUser } = useAuth();
-    const { data: quests, isLoading, refetch } = useQuests();
+  const { isLoading, refetch } = useQuests();
   const { data: dailyOverview, refetch: refetchDaily } = useDailyOverview();
-  const validateQuest = useCreateValidation();
-    const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
-    const createValidation = useCreateValidation();
+  const createValidation = useCreateValidation();
+  const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
 
     // Wellness hooks
     const today = new Date().toISOString().split('T')[0];
@@ -127,7 +126,6 @@ export default function DashboardScreen() {
         setValidatingQuestId(questId);
 
         if (!questId || !user?.id) {
-            console.error('Missing quest ID or user ID');
             return;
         }
 
@@ -140,7 +138,6 @@ export default function DashboardScreen() {
                 points_earned: points || 0, },
             {
                 onSuccess: (data) => {
-                    console.log(data);
                     if (data?.user_id) {
                         refreshUser();
                     }
@@ -194,7 +191,6 @@ export default function DashboardScreen() {
         });
     };
 
-  const activeQuests = quests?.filter(q => q.is_active) || [];
   const validatedToday = dailyOverview?.validated_count || 0;
 
   if (isLoading) {
@@ -343,7 +339,7 @@ export default function DashboardScreen() {
 
           <View style={[styles.statCard, { backgroundColor: QuestifyColors.primary }]}>
             <Text style={styles.statEmoji}>🎯</Text>
-            <Text style={styles.statValue}>{activeQuests.length}</Text>
+            <Text style={styles.statValue}>{dailyOverview?.quests?.length ?? 0}</Text>
             <Text style={styles.statLabel}>Quêtes actives</Text>
           </View>
         </View>
@@ -387,13 +383,13 @@ export default function DashboardScreen() {
                           isValidated && styles.validateButtonValidated,
                         ]}
                         onPress={() => handleValidate(quest)}
-                        disabled={validateQuest.isPending || !!isValidated}
+                        disabled={createValidation.isPending || !!isValidated}
                         activeOpacity={0.7}>
                         <Text style={[
                           styles.validateButtonText,
                           isValidated && styles.validateButtonTextValidated,
                         ]}>
-                          {validateQuest.isPending ? '...' : isValidated ? '✓ Validée' : '✓ Valider'}
+                          {createValidation.isPending ? '...' : isValidated ? '✓ Validée' : '✓ Valider'}
                         </Text>
                       </TouchableOpacity>
                   </View>

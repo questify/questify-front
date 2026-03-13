@@ -49,7 +49,7 @@ export function ArchivedQuestsTab({
                 {categories?.map((category) => (
                     <button
                         key={category.id}
-                        className={selectedCategory === category.id ? 'btn btn-primary' : 'btn'}
+                        className={selectedCategory === category.name ? 'btn btn-primary' : 'btn'}
                         onClick={() => setSelectedCategory(category.name)}
                         style={{
                             padding: '8px 16px',

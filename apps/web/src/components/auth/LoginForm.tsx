@@ -16,8 +16,8 @@ export function LoginForm() {
       } else {
         await login(email, password);
       }
-    } catch (error) {
-      console.error('Auth error:', error);
+    } catch {
+      // Error is handled by AuthContext (toast)
     }
   };
   return (

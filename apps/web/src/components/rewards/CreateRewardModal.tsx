@@ -6,6 +6,17 @@ interface CreateRewardModalProps {
     onClose: () => void;
 }
 
+const REWARD_TEMPLATES = [
+    { svg_icon: '☕', title: 'Café Starbucks', description: '', cost: 100 },
+    { svg_icon: '🍕', title: 'Pizza commande', description: '', cost: 200 },
+    { svg_icon: '🎬', title: 'Soirée cinéma', description: '', cost: 350 },
+    { svg_icon: '🎮', title: 'Soirée gaming', description: 'Sans culpabilité', cost: 150 },
+    { svg_icon: '🍰', title: 'Bon dessert', description: 'S\'offrir une pâtisserie', cost: 120 },
+    { svg_icon: '💆', title: 'Séance massage', description: '', cost: 800 },
+    { svg_icon: '👗', title: 'Shopping vêtements', description: '', cost: 600 },
+    { svg_icon: '🎁', title: 'Petit cadeau', description: 'S\'offrir quelque chose', cost: 400 },
+];
+
 const EMOJI_OPTIONS = [
     '☕', '🎬', '📚', '💅', '💆', '👗', '🏨', '🎮',
     '🍕', '🍰', '🎧', '🎨', '🏃', '🧘', '🎵', '📱',
@@ -53,7 +64,6 @@ export function CreateRewardModal({ isOpen, onClose }: CreateRewardModalProps) {
                     onClose();
                 },
                 onError: (error) => {
-                    console.error('Failed to create reward:', error);
                     alert('Erreur lors de la création de la récompense');
                 }
             }
@@ -110,11 +120,53 @@ export function CreateRewardModal({ isOpen, onClose }: CreateRewardModalProps) {
                 <h2 style={{
                     fontSize: '24px',
                     fontWeight: 700,
-                    marginBottom: '24px',
+                    marginBottom: '16px',
                     color: '#1A1A1A'
                 }}>
                     Nouvelle récompense
                 </h2>
+
+                {/* Templates */}
+                <div style={{ marginBottom: '24px' }}>
+                    <p style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '10px', fontWeight: 600 }}>
+                        ⚡ Suggestions rapides
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                        {REWARD_TEMPLATES.map((tpl, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => setFormData(prev => ({
+                                    ...prev,
+                                    svg_icon: tpl.svg_icon,
+                                    title: tpl.title,
+                                    description: tpl.description,
+                                    cost: tpl.cost,
+                                }))}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 12px',
+                                    border: '2px solid #E0E0E0',
+                                    borderRadius: '10px',
+                                    backgroundColor: 'white',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'all 0.15s',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8B7E8'; e.currentTarget.style.backgroundColor = '#F5F0FF'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E0E0E0'; e.currentTarget.style.backgroundColor = 'white'; }}
+                            >
+                                <span style={{ fontSize: '20px' }}>{tpl.svg_icon}</span>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>{tpl.title}</div>
+                                    <div style={{ fontSize: '11px', color: '#9B9B9B' }}>{tpl.cost} pts</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 <form onSubmit={handleSubmit}>
                     {/* Emoji Selector */}

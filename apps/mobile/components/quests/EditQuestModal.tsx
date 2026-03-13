@@ -70,6 +70,8 @@ export function EditQuestModal({ visible, quest, onClose, onSuccess }: EditQuest
           title,
           description,
           category_id: categoryId,
+          is_active: quest.is_active,
+          is_private: quest.is_private,
           frequency: frequencyName,
           points: parseInt(points) || 10,
           malus: parseInt(malus) || 0,

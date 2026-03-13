@@ -71,7 +71,6 @@ export default function QuestsScreen() {
     setValidatingQuestId(questId);
 
       if (!questId || !user?.id) {
-          console.error('Missing quest ID or user ID');
           return;
       }
 
@@ -572,10 +571,6 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 12,
     color: QuestifyColors.textSecondary,
-  },
-  frequency: {
-    fontSize: 12,
-    color: QuestifyColors.textLight,
   },
   frequencyChip: {
     paddingVertical: 3,

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useYearlyBoardData } from '@core/hooks/useApi';
+import { useAuth } from '@core/contexts/AuthContext';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
@@ -35,8 +36,10 @@ function moodEmoji(value: number): string {
 }
 
 export function YearlyBoard() {
+    const { user } = useAuth();
     const { data, isLoading, error } = useYearlyBoardData();
     const [tooltip, setTooltip] = useState<{ x: number; y: number; day: DayData } | null>(null);
+    const userStartDate = user?.start_date;
 
     const { weeks, monthLabels, today } = useMemo(() => {
         const today = new Date();
@@ -75,9 +78,17 @@ export function YearlyBoard() {
         // Don't force totalRef to 1 when there are no daily quests — keep it at 0
         const totalRef = dailyQuestCount;
 
-        // Start from 365 days ago (Monday of that week)
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 364);
+        // Start from user's start_date if set, otherwise 365 days ago
+        const startDate = (() => {
+            if (userStartDate) {
+                const d = new Date(userStartDate + 'T00:00:00');
+                d.setHours(0, 0, 0, 0);
+                return d;
+            }
+            const d = new Date(today);
+            d.setDate(d.getDate() - 364);
+            return d;
+        })();
         // Rewind to the Monday of that week
         const dayOfWeek = startDate.getDay(); // 0=Sun, 1=Mon...
         const daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -139,7 +150,7 @@ export function YearlyBoard() {
         }
 
         return { weeks, monthLabels, today: todayStr };
-    }, [data]);
+    }, [data, userStartDate]);
 
     if (isLoading) {
         return (

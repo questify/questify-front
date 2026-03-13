@@ -51,10 +51,11 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
         title,
         description,
         category_id: categoryId,
+        is_active: true,
+        is_private: false,
         frequency: frequencyName,
         points: parseInt(points) || 10,
         malus: parseInt(malus) || 0,
-        is_active: true,
         svg_icon: svgIcon || null,
       },
       {
