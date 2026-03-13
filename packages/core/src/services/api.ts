@@ -125,7 +125,7 @@ export const api = {
       }),
     edit: (id: string, data: Partial<Quest>) =>
       request<Quest>(`/api/quests/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: JSON.stringify(data),
       }),
   },
