@@ -52,8 +52,12 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.title || !formData.category_id || !formData.frequency) {
-            alert('Veuillez remplir tous les champs obligatoires');
+        const missing = [];
+        if (!formData.title) missing.push('un titre');
+        if (!formData.category_id) missing.push('une catégorie');
+        if (!formData.frequency) missing.push('une fréquence');
+        if (missing.length > 0) {
+            alert(`Champs manquants : ${missing.join(', ')}`);
             return;
         }
 
