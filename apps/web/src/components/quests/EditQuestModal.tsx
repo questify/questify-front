@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useCategories, useFrequencies, useUpdateQuest } from '@core/hooks/useApi';
+import { useCategories, useFrequencies, useEditQuest } from '@core/hooks/useApi';
 import { Quest } from '@core/types/api';
 
 interface EditQuestModalProps {
@@ -20,7 +20,7 @@ const PRESET_EMOJIS = [
 export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) {
     const { data: categories } = useCategories();
     const { data: frequencies } = useFrequencies();
-    const updateQuest = useUpdateQuest();
+    const editQuest = useEditQuest();
 
     const [formData, setFormData] = useState({
         svg_icon: '',
@@ -33,21 +33,26 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
         malus: 0,
     });
 
-    // Populate form when quest changes
+    // Populate form when quest or categories change
+    // category_id may not be returned by the API — find it via category_name as fallback
     useEffect(() => {
         if (quest) {
+            const resolvedCategoryId =
+                quest.category_id ||
+                categories?.find(c => c.name === quest.category_name)?.id ||
+                '';
             setFormData({
                 svg_icon: quest.svg_icon || '',
                 title: quest.title || '',
                 description: quest.description || '',
-                category_id: quest.category_id || '',
+                category_id: resolvedCategoryId,
                 frequency: quest.frequency || '',
                 is_private: quest.is_private || false,
                 points: quest.points || 0,
                 malus: quest.malus || 0,
             });
         }
-    }, [quest]);
+    }, [quest, categories]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,7 +63,7 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
         }
 
         try {
-            await updateQuest.mutateAsync({
+            await editQuest.mutateAsync({
                 id: quest.id,
                 data: {
                     title: formData.title,
@@ -332,7 +337,7 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
                         </button>
                         <button
                             type="submit"
-                            disabled={updateQuest.isPending}
+                            disabled={editQuest.isPending}
                             style={{
                                 flex: 1,
                                 padding: '12px',
@@ -341,11 +346,11 @@ export function EditQuestModal({ quest, isOpen, onClose }: EditQuestModalProps) 
                                 backgroundColor: '#C8B7E8',
                                 color: '#1A1A1A',
                                 fontWeight: 600,
-                                cursor: updateQuest.isPending ? 'not-allowed' : 'pointer',
-                                opacity: updateQuest.isPending ? 0.6 : 1,
+                                cursor: editQuest.isPending ? 'not-allowed' : 'pointer',
+                                opacity: editQuest.isPending ? 0.6 : 1,
                             }}
                         >
-                            {updateQuest.isPending ? 'Enregistrement...' : '💾 Enregistrer'}
+                            {editQuest.isPending ? 'Enregistrement...' : '💾 Enregistrer'}
                         </button>
                     </div>
                 </form>

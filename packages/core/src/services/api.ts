@@ -123,6 +123,11 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    edit: (id: string, data: Partial<Quest>) =>
+      request<Quest>(`/api/quests/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
   },
 
   // Rewards

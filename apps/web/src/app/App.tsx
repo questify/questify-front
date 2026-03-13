@@ -96,13 +96,7 @@ function App() {
                             <div
                                 className="avatar-small"
                                 style={getAvatarBg(user?.avatar_url) ? {
-                                    backgroundColor: getAvatarBg(user?.avatar_url),
-                                    borderRadius: '50%',
-                                    width: '40px',
-                                    height: '40px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
+                                    background: getAvatarBg(user?.avatar_url),
                                 } : undefined}
                             >
                                 {getAvatarUrl(user?.avatar_url) || '👤'}

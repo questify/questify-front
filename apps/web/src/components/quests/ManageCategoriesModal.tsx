@@ -12,6 +12,12 @@ const PRESET_COLORS = [
     '#FFB7B7', '#B7C5F0', '#A0E8E8', '#E8B7D4', '#D4E8A0', '#F0C5A0',
 ];
 
+const PRESET_CATEGORY_EMOJIS = [
+    '💪', '📚', '🎨', '🎵', '🍎', '💻', '🏃', '🧘',
+    '🎯', '🌿', '💰', '🏠', '🎮', '✈️', '🤝', '🔥',
+    '⭐', '🧹', '💤', '🎭', '🧩', '🌍', '📷', '🎓',
+];
+
 export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModalProps) {
     const { data: categories } = useCategories();
     const createCategory = useCreateCategory();
@@ -161,83 +167,108 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
                                 <>
                                     <form
                                         onSubmit={handleUpdateSubmit}
-                                        style={{ display: 'flex', flex: 1, gap: '8px', alignItems: 'center' }}
+                                        style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: '8px' }}
                                     >
-                                        <input
-                                            type="text"
-                                            placeholder="Emoji"
-                                            maxLength={2}
-                                            value={formData.svg_icon}
-                                            onChange={(e) => setFormData({ ...formData, svg_icon: e.target.value })}
-                                            style={{
-                                                width: '50px',
-                                                padding: '8px',
-                                                fontSize: '20px',
-                                                textAlign: 'center',
-                                                border: '1px solid #E5E5E5',
-                                                borderRadius: '6px',
-                                            }}
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Nom"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                            style={{
-                                                flex: 1,
-                                                padding: '8px 12px',
-                                                border: '1px solid #E5E5E5',
-                                                borderRadius: '6px',
-                                                fontSize: '14px',
-                                            }}
-                                        />
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '140px' }}>
-                                            {PRESET_COLORS.map((color) => (
-                                                <button
-                                                    key={color}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, color })}
-                                                    style={{
-                                                        width: '20px', height: '20px', borderRadius: '50%',
-                                                        backgroundColor: color,
-                                                        border: formData.color === color ? '2px solid #1A1A1A' : '1px solid #E5E5E5',
-                                                        cursor: 'pointer', padding: 0, flexShrink: 0,
-                                                    }}
-                                                />
-                                            ))}
+                                        {/* Row 1: name + save/cancel */}
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input
+                                                type="text"
+                                                placeholder="Nom"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                required
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '8px 12px',
+                                                    border: '1px solid #E5E5E5',
+                                                    borderRadius: '6px',
+                                                    fontSize: '14px',
+                                                }}
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={updateCategory.isPending}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    backgroundColor: '#C8EAD3',
+                                                    color: '#1A1A1A',
+                                                    fontWeight: 600,
+                                                    cursor: updateCategory.isPending ? 'not-allowed' : 'pointer',
+                                                    opacity: updateCategory.isPending ? 0.6 : 1,
+                                                }}
+                                            >
+                                                ✓
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleCancel}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    backgroundColor: '#FFD1C1',
+                                                    color: '#1A1A1A',
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
                                         </div>
-                                        <button
-                                            type="submit"
-                                            disabled={updateCategory.isPending}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: '6px',
-                                                border: 'none',
-                                                backgroundColor: '#C8EAD3',
-                                                color: '#1A1A1A',
-                                                fontWeight: 600,
-                                                cursor: updateCategory.isPending ? 'not-allowed' : 'pointer',
-                                                opacity: updateCategory.isPending ? 0.6 : 1,
-                                            }}
-                                        >
-                                            ✓
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleCancel}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: '6px',
-                                                border: 'none',
-                                                backgroundColor: '#FFD1C1',
-                                                color: '#1A1A1A',
-                                                fontWeight: 600,
-                                                cursor: 'pointer',
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
+                                        {/* Row 2: emoji input + quick-picks + colors */}
+                                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                            <input
+                                                type="text"
+                                                placeholder="😊"
+                                                maxLength={2}
+                                                value={formData.svg_icon}
+                                                onChange={(e) => setFormData({ ...formData, svg_icon: e.target.value })}
+                                                style={{
+                                                    width: '44px',
+                                                    padding: '5px',
+                                                    fontSize: '18px',
+                                                    textAlign: 'center',
+                                                    border: '1px solid #E5E5E5',
+                                                    borderRadius: '6px',
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                            {PRESET_CATEGORY_EMOJIS.slice(0, 12).map((emoji, i) => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, svg_icon: emoji })}
+                                                    style={{
+                                                        fontSize: '17px',
+                                                        padding: '4px',
+                                                        border: formData.svg_icon === emoji ? '2px solid #C8B7E8' : '1px solid #E5E5E5',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        backgroundColor: formData.svg_icon === emoji ? '#F5F0FF' : 'white',
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginLeft: 'auto' }}>
+                                                {PRESET_COLORS.map((color) => (
+                                                    <button
+                                                        key={color}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, color })}
+                                                        style={{
+                                                            width: '20px', height: '20px', borderRadius: '50%',
+                                                            backgroundColor: color,
+                                                            border: formData.color === color ? '2px solid #1A1A1A' : '1px solid #E5E5E5',
+                                                            cursor: 'pointer', padding: 0, flexShrink: 0,
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
                                     </form>
                                 </>
                             ) : (
@@ -326,37 +357,62 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>
                                 Nouvelle catégorie
                             </label>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {/* Name */}
+                            <input
+                                type="text"
+                                placeholder="Nom de la catégorie"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '12px',
+                                    border: '2px solid #E5E5E5',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    marginBottom: '12px',
+                                }}
+                            />
+                            {/* Emoji */}
+                            <div style={{ marginBottom: '12px' }}>
+                                <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '6px', fontWeight: 500 }}>Emoji</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '6px', marginBottom: '8px' }}>
+                                    {PRESET_CATEGORY_EMOJIS.map((emoji, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, svg_icon: emoji })}
+                                            style={{
+                                                fontSize: '20px',
+                                                padding: '6px',
+                                                border: formData.svg_icon === emoji ? '2px solid #C8B7E8' : '2px solid #E5E5E5',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                backgroundColor: formData.svg_icon === emoji ? '#F5F0FF' : 'white',
+                                                transition: 'all 0.15s',
+                                            }}
+                                        >
+                                            {emoji}
+                                        </button>
+                                    ))}
+                                </div>
                                 <input
                                     type="text"
-                                    placeholder="Emoji"
+                                    placeholder="Ou entre un autre emoji..."
                                     maxLength={2}
                                     value={formData.svg_icon}
                                     onChange={(e) => setFormData({ ...formData, svg_icon: e.target.value })}
                                     style={{
-                                        width: '60px',
-                                        padding: '12px',
-                                        fontSize: '24px',
+                                        width: '100%',
+                                        padding: '10px',
+                                        fontSize: '20px',
                                         textAlign: 'center',
                                         border: '2px solid #E5E5E5',
                                         borderRadius: '8px',
                                     }}
                                 />
-                                <input
-                                    type="text"
-                                    placeholder="Nom de la catégorie"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        border: '2px solid #E5E5E5',
-                                        borderRadius: '8px',
-                                        fontSize: '14px',
-                                    }}
-                                />
                             </div>
+                            {/* Color */}
                             <div style={{ marginTop: '10px' }}>
                                 <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '8px', fontWeight: 500 }}>Couleur</div>
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>

@@ -62,7 +62,9 @@ export function SettingsPage() {
                 start_date: startDate || undefined,
             });
 
-            updateUser(updatedUser);
+            // Merge the local avatarUrl to preserve the emoji|color format
+            // in case the backend strips the color part from its response
+            updateUser({ ...updatedUser, avatar_url: avatarUrl || updatedUser.avatar_url });
 
             toast.success('Profil mis à jour avec succès');
             setIsEditingProfile(false);
