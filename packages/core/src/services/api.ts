@@ -188,6 +188,10 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
+    seedDefaults: () =>
+      request<{ success?: boolean; skipped?: boolean; message: string }>('/api/users/seed-defaults', {
+        method: 'POST',
+      }),
     uploadAvatar: async (fileOrFormData: File | Blob | FormData): Promise<{ avatar_url: string }> => {
       const url = apiUrl('/api/upload/avatar');
       const token = await getToken();
@@ -291,6 +295,10 @@ export const api = {
       request<void>(`/api/teams/${id}/challenges/${challengeId}`, {
         method: 'DELETE',
       }),
+    getSharedProgress: (id: string) =>
+      request<any>(`/api/teams/${id}/shared-progress`),
+    searchUsers: (query: string) =>
+      request<any[]>(`/api/users?search=${encodeURIComponent(query)}`),
   },
 };
 

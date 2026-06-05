@@ -1,0 +1,205 @@
+/* ============================================================
+   QUESTIFY — Colors & Type
+   ============================================================
+   Lilas/violet-led gamified wellness palette. Soft, warm, playful.
+   Source of truth: questify-front/apps/mobile/constants/colors.ts
+   and questify-front/apps/web/src/styles/App.css
+   ============================================================ */
+
+/* ---------- Fonts ---------- */
+/* Body: Inter — the literal stack in apps/web/src/styles/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* Heading: substituting Plus Jakarta Sans (700/800) for Arial Black / "Agrandir".
+   See the @font-face in apps/web/src/styles/App.css — they alias Agrandir to
+   Arial Black. Plus Jakarta Sans is a modern geometric face that gives Questify
+   a friendlier, more contemporary heading voice than the original blocky stand-in.
+   Swap in real Agrandir TTFs if available. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ===== Brand color tokens — direct from constants/colors.ts ===== */
+  --q-primary:        #C8B7E8;   /* Violet principal — buttons, accents, current state */
+  --q-primary-light:  #E8DFFA;   /* Lavender tint — soft backgrounds, selected states */
+  --q-primary-dark:   #8F72C4;   /* Deep violet — primary text on light lavender, gradient ends */
+  --q-primary-darker: #9B7DC8;   /* Used in modal cost values */
+
+  --q-green:          #C8EAD3;   /* Vert récompenses — success, completed days */
+  --q-green-light:    #E0F5E8;   /* Soft mint — success backgrounds */
+  --q-green-deep:     #5BA073;   /* Success text */
+  --q-green-bg-alt:   #F0FBF4;   /* Reward "remaining" panel */
+
+  --q-blue:           #79BEEE;   /* Bleu — info, medium reward tier */
+  --q-blue-light:     #DEF0FC;   /* Info badge bg */
+  --q-blue-deep:      #5B9ACA;   /* Info badge text */
+
+  --q-orange:         #F2B8A3;   /* Orange — secondary buttons, xlarge tier */
+  --q-orange-light:   #FFE8E0;   /* Sport / hard difficulty bg */
+  --q-orange-deep:    #D87A5E;   /* Sport / hard text */
+  --q-orange-mid:     #FFD1C1;   /* Missed state */
+
+  --q-yellow:         #FFD93D;   /* Jaune — energy, streak burst */
+  --q-yellow-light:   #FFF4E0;   /* Medium difficulty bg */
+  --q-yellow-deep:    #D8A857;   /* Medium difficulty text */
+
+  /* ===== Neutrals (text + surfaces) ===== */
+  --q-fg:             #1A1A1A;   /* textPrimary — headings, body emphasis */
+  --q-fg-2:           #423C3C;   /* Warm dark — used in CSS as 'color: #423C3C' for body */
+  --q-fg-muted:       #6B6B6B;   /* textSecondary — descriptions, subtitles */
+  --q-fg-light:       #999999;   /* textLight — placeholders, upcoming */
+  --q-fg-disabled:    #A0A0A0;   /* Disabled button text */
+
+  --q-bg:             #FFFFFF;   /* surface — cards, panels */
+  --q-bg-app:         #FAFAFA;   /* App background (web) */
+  --q-bg-soft:        #F5F5F5;   /* Hover, icon button bg */
+  --q-bg-softer:      #F0F0F0;   /* Progress track, upcoming cells */
+  --q-bg-violet-tint: #F5F2FA;   /* Lavender washed bg (modal headers) */
+
+  --q-border:         #E5E5E5;   /* Default borders */
+  --q-border-soft:    #E0E0E0;   /* Tab divider, lighter borders */
+  --q-divider:        #EEEEEE;   /* List dividers */
+
+  --q-overlay:        rgba(0, 0, 0, 0.5);
+
+  /* ===== Semantic / status ===== */
+  --q-success:        #4CAF50;
+  --q-success-bg:     #E8F5E9;
+  --q-error:          #F44336;
+  --q-error-soft:     #FF6B6B;
+  --q-warning:        #FF9800;
+  --q-info:           #2196F3;
+
+  /* ===== Category badge palette (sport, nutrition, etc.) ===== */
+  --q-cat-sport-bg:        #FFE8E0;
+  --q-cat-sport-fg:        #D87A5E;
+  --q-cat-nutrition-bg:    #E0F5E8;
+  --q-cat-nutrition-fg:    #5BA073;
+  --q-cat-wellbeing-bg:    #E8DFFA;
+  --q-cat-wellbeing-fg:    #8F72C4;
+  --q-cat-personal-bg:     #DEF0FC;
+  --q-cat-personal-fg:     #5B9ACA;
+
+  /* ===== Gradients ===== */
+  --q-grad-primary: linear-gradient(135deg, #C8B7E8 0%, #A996D3 100%);
+  --q-grad-primary-deep: linear-gradient(135deg, #C8B7E8 0%, #9B7DC8 100%);
+  --q-grad-primary-soft: linear-gradient(135deg, #F5F2FA 0%, #C8B7E8 100%);
+  --q-grad-primary-wash: linear-gradient(135deg, #F5F2FA 0%, #E8DFFA 100%);
+  --q-grad-green:   linear-gradient(135deg, #C8EAD3 0%, #A8DAB3 100%);
+  --q-grad-blue:    linear-gradient(135deg, #79BEEE 0%, #5998CE 100%);
+  --q-grad-orange:  linear-gradient(135deg, #F2B8A3 0%, #D29883 100%);
+  --q-grad-fire:    linear-gradient(135deg, #F2B8A3 0%, #FFD93D 100%);
+  --q-grad-missed:  linear-gradient(135deg, #FFD1C1 0%, #FFB8A8 100%);
+
+  /* ===== Typography ===== */
+  --q-font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Display: Plus Jakarta Sans as a free stand-in for Agrandir Black / Arial Black. */
+  --q-font-display: 'Plus Jakarta Sans', 'Arial Black', 'Inter', system-ui, sans-serif;
+
+  /* Type scale (web app uses these literal sizes) */
+  --q-fs-display: 36px;   /* page h1 ("Mes Quêtes 🎯") */
+  --q-fs-h1:      32px;   /* big stat values */
+  --q-fs-h2:      24px;   /* modal titles */
+  --q-fs-h3:      20px;   /* section titles */
+  --q-fs-h4:      18px;   /* card titles */
+  --q-fs-body:    16px;   /* base */
+  --q-fs-md:      15px;   /* secondary actions */
+  --q-fs-sm:      14px;   /* metadata, dropdown items */
+  --q-fs-xs:      13px;   /* fine print */
+  --q-fs-2xs:     12px;   /* badges, labels */
+  --q-fs-3xs:     11px;   /* uppercase eyebrow */
+
+  --q-fw-regular:  400;
+  --q-fw-medium:   500;
+  --q-fw-semibold: 600;
+  --q-fw-bold:     700;
+  --q-fw-black:    800;   /* display weight (web uses 800 with Arial Black) */
+
+  --q-lh-tight:    1.15;
+  --q-lh-normal:   1.4;
+  --q-lh-relaxed:  1.55;
+
+  /* ===== Radii ===== */
+  --q-radius-xs:   6px;
+  --q-radius-sm:   8px;   /* inputs (mobile), small buttons */
+  --q-radius-md:   10px;  /* dropdown items */
+  --q-radius-lg:   12px;  /* default buttons / cards / chips */
+  --q-radius-xl:   16px;  /* stat cards, reward cards */
+  --q-radius-2xl:  20px;  /* big content cards */
+  --q-radius-3xl:  24px;  /* modals, team card */
+  --q-radius-pill: 999px; /* circular avatars, pill badges */
+
+  /* ===== Spacing scale ===== */
+  --q-space-0:   0;
+  --q-space-1:   4px;
+  --q-space-2:   8px;
+  --q-space-3:   12px;
+  --q-space-4:   16px;
+  --q-space-5:   20px;
+  --q-space-6:   24px;
+  --q-space-8:   30px;   /* content gap below header */
+  --q-space-10:  40px;   /* card inner padding (modal) */
+  --q-space-12:  60px;
+
+  /* ===== Shadow / elevation system ===== */
+  --q-shadow-xs:   0 2px 4px rgba(0, 0, 0, 0.05);    /* week cells at rest */
+  --q-shadow-sm:   0 2px 8px rgba(0, 0, 0, 0.06);    /* stat cards, reward cards */
+  --q-shadow-md:   0 2px 12px rgba(0, 0, 0, 0.06);   /* main cards */
+  --q-shadow-lg:   0 4px 12px rgba(0, 0, 0, 0.15);   /* hover lift */
+  --q-shadow-xl:   0 6px 20px rgba(0, 0, 0, 0.12);   /* reward hover */
+  --q-shadow-2xl:  0 8px 24px rgba(0, 0, 0, 0.12);   /* dropdown menu */
+  --q-shadow-modal: 0 8px 40px rgba(0, 0, 0, 0.18);  /* modal */
+  --q-shadow-sidebar: 2px 0 10px rgba(0, 0, 0, 0.05);
+  --q-shadow-glow-primary: 0 4px 12px rgba(155, 125, 200, 0.40); /* primary CTA glow */
+  --q-shadow-pulse: 0 4px 12px rgba(200, 183, 232, 0.4); /* keyframe pulse */
+
+  /* ===== Motion ===== */
+  --q-ease:          cubic-bezier(0.4, 0, 0.2, 1);
+  --q-dur-fast:      150ms;
+  --q-dur-base:      200ms;   /* most hover transitions */
+  --q-dur-mid:       250ms;   /* sidebar collapse */
+  --q-dur-slow:      300ms;   /* progress bar fill, chart */
+
+  /* ===== Layout ===== */
+  --q-sidebar-w:        15%;  /* declared as %, expands to ~240px at 1440 */
+  --q-sidebar-collapsed: 64px;
+  --q-topbar-h:         70px;
+}
+
+/* ============================================================
+   Semantic element styles
+   ============================================================ */
+
+body {
+  font-family: var(--q-font-body);
+  background: var(--q-bg-app);
+  color: var(--q-fg-2);
+  font-size: var(--q-fs-body);
+  line-height: var(--q-lh-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .q-title {
+  font-family: var(--q-font-display);
+  font-weight: var(--q-fw-black);
+  color: var(--q-fg-2);
+  letter-spacing: -0.01em;
+  line-height: var(--q-lh-tight);
+}
+
+h1 { font-size: var(--q-fs-display); }
+h2 { font-size: var(--q-fs-h2); }
+h3 { font-size: var(--q-fs-h3); }
+h4 { font-size: var(--q-fs-h4); font-weight: var(--q-fw-bold); }
+
+p { color: var(--q-fg-muted); }
+
+.q-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* "Eyebrow" small caps label, used in modals for COÛT, RESTANT, PROCHAIN BADGE */
+.q-eyebrow {
+  font-size: var(--q-fs-3xs);
+  font-weight: var(--q-fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--q-primary-dark);
+}

@@ -9,6 +9,7 @@ import {BoardPage} from '../components/board/BoardPage';
 import {SettingsPage} from '../components/settings/SettingsPage';
 import {RewardsPage} from '../components/rewards/RewardsPage';
 import {CompetitionPage} from '../components/competition/CompetitionPage';
+import {StatsPage} from '../components/stats/StatsPage';
 
 function App() {
     const {user, isAuthenticated, isAuthReady, isUserReady, logout} = useAuth();
@@ -22,11 +23,13 @@ function App() {
     if (isLoading) {
         return (
             <div
-                className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100">
+                className="min-h-screen flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #F5F2FA 0%, #E8DFFA 50%, #DEF0FC 100%)' }}>
                 <div className="text-center">
                     <div
-                        className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading...</p>
+                        className="animate-spin rounded-full h-12 w-12 mx-auto mb-4"
+                        style={{ borderBottom: '2px solid #8F72C4' }}></div>
+                    <p style={{ color: '#6B6B6B' }}>Chargement…</p>
                 </div>
             </div>
         );
@@ -139,6 +142,7 @@ function App() {
                 {activePage === 'competition' && <CompetitionPage />}
                 {activePage === 'settings' && <SettingsPage />}
                 {activePage === 'rewards' && <RewardsPage />}
+                {activePage === 'stats' && <StatsPage />}
             </div>
         </div>
     )

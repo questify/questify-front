@@ -1,9 +1,12 @@
 // Questify Color Palette
+// Single source of truth for mobile colour tokens.
+// Mirrors questify-design-system/colors_and_type.css.
 export const QuestifyColors = {
   // Primary colors
   primary: '#C8B7E8',      // Violet principal
   primaryLight: '#E8DFFA',
   primaryDark: '#8F72C4',
+  primaryDarker: '#9B7DC8', // Deeper accent (modal cost values, hover)
 
   // Secondary colors
   green: '#C8EAD3',        // Vert pour récompenses

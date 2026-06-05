@@ -9,10 +9,12 @@ import {useQuests, useCategories, useFrequencies, useCreateValidation, useUpdate
 } from '@/core/hooks/useApi';
 import { Quest } from '@/core/types/api';
 import { QuestifyColors } from '@/mobile/constants/colors';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 import { CreateQuestModal } from '@/mobile/components/quests/CreateQuestModal';
 import { EditQuestModal } from '@/mobile/components/quests/EditQuestModal';
 import { ManageCategoriesModal } from '@/mobile/components/quests/ManageCategoriesModal';
+import { api } from '@/core/services/api';
 
 export default function QuestsScreen() {
     const { user, refreshUser } = useAuth();
@@ -28,6 +30,24 @@ export default function QuestsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [validatingQuestId, setValidatingQuestId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  const handleSeedDefaults = async () => {
+    setIsSeeding(true);
+    try {
+      const result = await api.users.seedDefaults();
+      if (result.skipped) {
+        Alert.alert('Info', result.message);
+      } else {
+        Alert.alert('🎉 Prêt !', 'Tes premières quêtes et récompenses ont été créées !');
+        refetch();
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message || 'Impossible de créer les données par défaut');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
   const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
 
@@ -266,7 +286,7 @@ export default function QuestsScreen() {
             style={styles.secondaryButton}
             onPress={() => setIsManageCategoriesOpen(true)}
             activeOpacity={0.7}>
-            <Text style={styles.secondaryButtonText}>⚙️</Text>
+            <Text style={styles.secondaryButtonText}>🏷️</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.createButton}
@@ -368,15 +388,22 @@ export default function QuestsScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>{tab === 'active' ? '🎯' : '📦'}</Text>
             <Text style={styles.emptyText}>
-              {tab === 'active'
-                ? 'Aucune quête active pour le moment'
-                : 'Aucune quête archivée'}
+              {tab === 'active' ? 'Aucune quête active' : 'Aucune quête archivée'}
             </Text>
-            <Text style={styles.emptyHint}>
-              {tab === 'active'
-                ? 'Créez votre première quête depuis la version web'
-                : 'Les quêtes archivées apparaîtront ici'}
-            </Text>
+            {tab === 'active' ? (
+              <TouchableOpacity
+                style={styles.seedButton}
+                onPress={handleSeedDefaults}
+                disabled={isSeeding}
+                activeOpacity={0.7}>
+                {isSeeding
+                  ? <ActivityIndicator color={QuestifyColors.textPrimary} />
+                  : <Text style={styles.seedButtonText}>✨ Démarrer avec des quêtes par défaut</Text>
+                }
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.emptyHint}>Les quêtes archivées apparaîtront ici</Text>
+            )}
           </View>
         }
       />
@@ -435,8 +462,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   screenTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -653,6 +682,21 @@ const styles = StyleSheet.create({
     color: QuestifyColors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 40,
+  },
+  seedButton: {
+    marginTop: 16,
+    backgroundColor: QuestifyColors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  seedButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: QuestifyColors.textPrimary,
   },
   headerButtons: {
     flexDirection: 'row',

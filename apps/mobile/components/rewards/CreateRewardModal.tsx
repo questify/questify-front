@@ -144,12 +144,14 @@ export function CreateRewardModal({ visible, onClose, onSuccess }: CreateRewardM
             placeholderTextColor={QuestifyColors.textLight}
             keyboardType="numeric"
           />
-          <Text style={styles.hint}>
-            {parseInt(cost) <= 300 ? '💚 Petit plaisir' :
-             parseInt(cost) <= 600 ? '💙 Moyen plaisir' :
-             parseInt(cost) <= 1000 ? '💜 Grand plaisir' :
-             '🧡 Gros plaisir'}
-          </Text>
+          {cost !== '' && !isNaN(parseInt(cost)) && (
+            <Text style={styles.hint}>
+              {parseInt(cost) <= 300 ? '💚 Petit plaisir' :
+               parseInt(cost) <= 600 ? '💙 Moyen plaisir' :
+               parseInt(cost) <= 1000 ? '💜 Grand plaisir' :
+               '🧡 Gros plaisir'}
+            </Text>
+          )}
         </View>
 
         <TouchableOpacity
