@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useYearlyBoardData } from '@/core/hooks/useApi';
 import { QuestifyColors } from '@/mobile/constants/colors';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 
 interface DayCell {
@@ -773,8 +774,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   title: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -876,8 +879,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   yearTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.3,
     color: QuestifyColors.textPrimary,
   },
   daysContainer: {
@@ -1014,8 +1019,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -1029,8 +1035,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   legendTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
     marginBottom: 16,
   },

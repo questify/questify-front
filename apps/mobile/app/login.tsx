@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import {
   View,
   Text,
@@ -181,8 +182,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 8,
   },
@@ -226,17 +229,17 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: QuestifyColors.background,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     color: QuestifyColors.textPrimary,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: QuestifyColors.border,
   },
   submitButton: {
     backgroundColor: QuestifyColors.primary,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -247,8 +250,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
   },
   info: {

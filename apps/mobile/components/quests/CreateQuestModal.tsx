@@ -41,6 +41,13 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
   const [malus, setMalus] = useState('0');
 
   const handleSubmit = async () => {
+    if (categories && categories.length === 0) {
+      Alert.alert(
+        'Aucune catégorie',
+        'Crée d\'abord une catégorie via le bouton 🏷️ en haut de l\'écran Quêtes.',
+      );
+      return;
+    }
     if (!title || !categoryId || !frequencyName) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
@@ -210,10 +217,15 @@ export function CreateQuestModal({ visible, onClose, onSuccess }: CreateQuestMod
           </View>
         </View>
 
+        {categories?.length === 0 && (
+          <Text style={{ color: QuestifyColors.error, fontSize: 13, textAlign: 'center', marginBottom: 4 }}>
+            ⚠️ Crée d'abord une catégorie (bouton 🏷️ sur l'écran Quêtes)
+          </Text>
+        )}
         <TouchableOpacity
-          style={[styles.submitButton, createQuest.isPending && styles.submitButtonDisabled]}
+          style={[styles.submitButton, (createQuest.isPending || !categories?.length) && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={createQuest.isPending}
+          disabled={createQuest.isPending || !categories?.length}
           activeOpacity={0.7}>
           {createQuest.isPending ? (
             <ActivityIndicator color={QuestifyColors.textPrimary} />

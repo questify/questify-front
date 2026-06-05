@@ -279,7 +279,7 @@ export function RewardsPage() {
                             <button className="btn btn-primary" style={{
                                 width: '100%',
                                 padding: '12px',
-                                borderRadius: '8px',
+                                borderRadius: '12px',
                                 border: 'none',
                                 backgroundColor: '#C8B7E8',
                                 color: '#1A1A1A',
@@ -315,7 +315,7 @@ export function RewardsPage() {
                             <button className="btn btn-primary" style={{
                                 width: '100%',
                                 padding: '12px',
-                                borderRadius: '8px',
+                                borderRadius: '12px',
                                 border: 'none',
                                 backgroundColor: '#C8B7E8',
                                 color: '#1A1A1A',
@@ -405,7 +405,7 @@ export function RewardsPage() {
                             onClick={() => setIsCreateModalOpen(true)}
                             style={{
                                 padding: '12px 24px',
-                                borderRadius: '8px',
+                                borderRadius: '12px',
                                 border: 'none',
                                 backgroundColor: '#C8B7E8',
                                 color: '#1A1A1A',
@@ -534,9 +534,9 @@ export function RewardsPage() {
                                     style={{
                                         flex: 1,
                                         padding: '13px',
-                                        borderRadius: '10px',
-                                        border: '2px solid #E5E5E5',
-                                        backgroundColor: 'white',
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        backgroundColor: '#F5F5F5',
                                         color: '#6B6B6B',
                                         fontWeight: 600,
                                         cursor: 'pointer',
@@ -551,14 +551,13 @@ export function RewardsPage() {
                                     style={{
                                         flex: 2,
                                         padding: '13px',
-                                        borderRadius: '10px',
+                                        borderRadius: '12px',
                                         border: 'none',
-                                        background: purchaseReward.isPending ? '#E0E0E0' : 'linear-gradient(135deg, #C8B7E8 0%, #9B7DC8 100%)',
-                                        color: purchaseReward.isPending ? '#A0A0A0' : 'white',
+                                        background: purchaseReward.isPending ? '#E0E0E0' : '#C8B7E8',
+                                        color: purchaseReward.isPending ? '#A0A0A0' : '#1A1A1A',
                                         fontWeight: 700,
                                         cursor: purchaseReward.isPending ? 'not-allowed' : 'pointer',
                                         fontSize: '15px',
-                                        boxShadow: purchaseReward.isPending ? 'none' : '0 4px 12px rgba(155, 125, 200, 0.4)',
                                     }}
                                 >
                                     {purchaseReward.isPending ? 'Achat...' : '🎁 Confirmer l\'achat'}

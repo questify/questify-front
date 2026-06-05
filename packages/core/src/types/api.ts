@@ -36,6 +36,7 @@ export interface Reward {
   description: string | null;
   cost: number;
   svg_icon: string | null;
+  is_badge?: boolean;
   created_at: string;
 }
 

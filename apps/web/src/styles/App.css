@@ -1,6 +1,8 @@
+@import './tokens.css';
+
 @font-face {
     font-family: 'Agrandir';
-    src: local('Arial Black'), local('Arial Bold');
+    src: local('Plus Jakarta Sans'), local('Arial Black'), local('Arial Bold');
     font-weight: 800;
 }
 
@@ -17,9 +19,10 @@ body {
 }
 
 h1, h2, h3, .title {
-    font-family: 'Arial Black', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Agrandir', 'Arial Black', system-ui, sans-serif;
     font-weight: 800;
     color: #423C3C;
+    letter-spacing: -0.01em;
 }
 
 .content {
@@ -107,7 +110,7 @@ h1, h2, h3, .title {
 }
 
 .logo {
-    font-family: 'Arial Black', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Agrandir', 'Arial Black', system-ui, sans-serif;
     font-size: 24px;
     font-weight: 800;
     color: #423C3C;

@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/core/contexts/AuthContext';
 import { useUpdateUser } from '@/core/hooks/useApi';
 import { QuestifyColors } from '@/mobile/constants/colors';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 import { getApiConfig } from '@/core/types/api';
 
@@ -332,8 +333,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   title: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
   },
   profileCard: {
@@ -381,8 +384,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   name: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.3,
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -395,8 +400,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statsTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
     marginBottom: 16,
   },
@@ -408,8 +414,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },

@@ -55,29 +55,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!isAuthReady) return;
 
+        // Pas de token : résoudre immédiatement sans passer par le spinner
+        if (!token) {
+            setUser(null);
+            setIsUserReady(true);
+            return;
+        }
+
+        let cancelled = false;
+
         (async () => {
             setIsUserReady(false);
-
-            if (!token) {
-                setUser(null);
-                setIsUserReady(true);
-                return;
-            }
-
             try {
-                // ⚠️ adapte l’endpoint à ton backend :
-                // "/api/users/me" ou "/api/auth/me"
                 const me = await api.users.getMe();
-                setUser(me);
+                if (!cancelled) setUser(me);
             } catch (e) {
-                // Token invalide/expiré => on nettoie
-                await clearToken();
-                setToken(null);
-                setUser(null);
+                if (!cancelled) {
+                    // Token invalide/expiré => on nettoie
+                    // On passe par un setter fonctionnel pour ne pas ajouter
+                    // `token` dans les deps et éviter une boucle
+                    await clearToken();
+                    setToken(null);
+                    setUser(null);
+                }
             } finally {
-                setIsUserReady(true);
+                if (!cancelled) setIsUserReady(true);
             }
         })();
+
+        return () => { cancelled = true; };
     }, [isAuthReady, token]);
 
     const refreshUser = async () => {

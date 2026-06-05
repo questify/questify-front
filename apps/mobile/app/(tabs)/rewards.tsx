@@ -14,8 +14,10 @@ import { useAuth } from '@/core/contexts/AuthContext';
 import { useRewards, usePurchaseReward } from '@/core/hooks/useApi';
 import { Reward } from '@/core/types/api';
 import { QuestifyColors, RewardTierColors } from '@/mobile/constants/colors';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 import { CreateRewardModal } from '@/mobile/components/rewards/CreateRewardModal';
+import { EditRewardModal } from '@/mobile/components/rewards/EditRewardModal';
 
 type RewardTier = {
   title: string;
@@ -32,6 +34,7 @@ export default function RewardsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [purchasingRewardId, setPurchasingRewardId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
 
   const userPoints = Number(user?.total_points) || 0;
 
@@ -152,6 +155,14 @@ export default function RewardsScreen() {
 
     return (
       <Card style={styles.rewardCard}>
+        {/* Edit button */}
+        <TouchableOpacity
+          style={styles.editIconButton}
+          onPress={() => setEditingReward(reward)}
+          activeOpacity={0.7}>
+          <Text style={styles.editIconText}>✏️</Text>
+        </TouchableOpacity>
+
         {/* Emoji Icon */}
         <View style={styles.emojiContainer}>
           <Text style={styles.emoji}>{reward.svg_icon || '🎁'}</Text>
@@ -183,7 +194,7 @@ export default function RewardsScreen() {
             <ActivityIndicator size="small" color={QuestifyColors.textPrimary} />
           ) : (
             <Text style={styles.buyButtonText}>
-              {canAfford ? "M'offrir" : 'Pas assez de points'}
+              {canAfford ? "🎁 M'offrir" : 'Pas assez de points'}
             </Text>
           )}
         </TouchableOpacity>
@@ -294,6 +305,16 @@ export default function RewardsScreen() {
           onSuccess={refetch}
         />
       )}
+
+      {/* Edit Reward Modal */}
+      {editingReward && (
+        <EditRewardModal
+          visible={editingReward !== null}
+          reward={editingReward}
+          onClose={() => setEditingReward(null)}
+          onSuccess={refetch}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -323,8 +344,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   screenTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
   },
   pointsBanner: {
@@ -339,8 +362,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pointsValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -390,8 +415,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   tierTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: QuestifyColors.textPrimary,
   },
   tierCount: {
@@ -404,6 +430,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: 'center',
     paddingVertical: 20,
+    position: 'relative',
+  },
+  editIconButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: QuestifyColors.backgroundLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  editIconText: {
+    fontSize: 16,
   },
   emojiContainer: {
     marginBottom: 12,
@@ -428,15 +470,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   cost: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.primary,
     marginBottom: 16,
   },
   buyButton: {
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 8,
+    borderRadius: 12,
     minWidth: 160,
     alignItems: 'center',
     justifyContent: 'center',

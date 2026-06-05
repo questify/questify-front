@@ -536,3 +536,13 @@ export function useDeleteTeamChallenge() {
         },
     });
 }
+
+export function useTeamSharedProgress(teamId: string) {
+    const { isAuthReady, isLoggedIn } = useAuth();
+    return useQuery({
+        queryKey: ['teamSharedProgress', teamId],
+        queryFn: () => api.teams.getSharedProgress(teamId),
+        enabled: !!teamId && isAuthReady && isLoggedIn,
+        refetchInterval: 30000, // Refresh every 30s for live progress
+    });
+}

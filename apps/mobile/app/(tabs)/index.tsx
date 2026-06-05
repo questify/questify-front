@@ -22,12 +22,22 @@ import {
   usePositiveThingsHistory,
 } from '@/core/hooks/useApi';
 import { QuestifyColors } from '@/mobile/constants/colors';
+import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 import { Quest } from "@/core/types/api";
 
 type Mood = 'amazing' | 'good' | 'okay' | 'bad' | 'terrible' | null;
 
-const moodToValue: Record<Mood, number> = {
+// Couleur du bouton sélectionné par humeur
+const MOOD_COLORS: Record<Exclude<Mood, null>, string> = {
+  amazing: '#FFD93D', // jaune vif
+  good:    '#C8EAD3', // vert doux
+  okay:    '#DEF0FC', // bleu ciel
+  bad:     '#FFE8D0', // orange doux
+  terrible:'#FFD1C1', // rouge doux
+};
+
+const moodToValue: Record<Exclude<Mood, null>, number> = {
   amazing: 5,
   good: 4,
   okay: 3,
@@ -79,13 +89,13 @@ export default function DashboardScreen() {
     if (existingPositiveThings && existingPositiveThings.length > 0) {
       const ptDate = (existingPositiveThings[0]?.date || existingPositiveThings[0]?.created_at || '').split('T')[0];
       if (ptDate === today) {
-        const hasData = existingPositiveThings[0]?.thing_1 || existingPositiveThings[0]?.thing_2 || existingPositiveThings[0]?.thing_3;
         setPositiveThings([
           existingPositiveThings[0]?.thing_1 || '',
           existingPositiveThings[0]?.thing_2 || '',
           existingPositiveThings[0]?.thing_3 || '',
         ]);
-        setIsPositiveThingsEditable(!hasData);
+        // Un enregistrement existe pour aujourd'hui → lecture seule par défaut
+        setIsPositiveThingsEditable(false);
       } else {
         setPositiveThings(['', '', '']);
         setIsPositiveThingsEditable(true);
@@ -162,7 +172,7 @@ export default function DashboardScreen() {
         if (mood) {
             createOrUpdateMood.mutate({
                 date: today,
-                mood_value: moodToValue[mood]
+                mood_value: moodToValue[mood as Exclude<Mood, null>]
             }, {
                 onSuccess: () => {
                     Alert.alert('✅ Info enregistrée', 'Ton humeur a été enregistrée');
@@ -224,36 +234,27 @@ export default function DashboardScreen() {
         <Card style={styles.wellnessCard}>
           <Text style={styles.wellnessTitle}>Comment te sens-tu aujourd'hui ? 😊</Text>
           <View style={styles.moodContainer}>
-            <TouchableOpacity
-              style={[styles.moodButton, selectedMood === 'amazing' && styles.moodButtonSelected]}
-              onPress={() => handleMoodSelect('amazing')}
-              activeOpacity={0.7}>
-              <Text style={styles.moodEmoji}>😍</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.moodButton, selectedMood === 'good' && styles.moodButtonSelected]}
-              onPress={() => handleMoodSelect('good')}
-              activeOpacity={0.7}>
-              <Text style={styles.moodEmoji}>😊</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.moodButton, selectedMood === 'okay' && styles.moodButtonSelected]}
-              onPress={() => handleMoodSelect('okay')}
-              activeOpacity={0.7}>
-              <Text style={styles.moodEmoji}>😐</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.moodButton, selectedMood === 'bad' && styles.moodButtonSelected]}
-              onPress={() => handleMoodSelect('bad')}
-              activeOpacity={0.7}>
-              <Text style={styles.moodEmoji}>😔</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.moodButton, selectedMood === 'terrible' && styles.moodButtonSelected]}
-              onPress={() => handleMoodSelect('terrible')}
-              activeOpacity={0.7}>
-              <Text style={styles.moodEmoji}>😢</Text>
-            </TouchableOpacity>
+            {([
+              { mood: 'amazing', emoji: '😍' },
+              { mood: 'good',    emoji: '😊' },
+              { mood: 'okay',    emoji: '😐' },
+              { mood: 'bad',     emoji: '😔' },
+              { mood: 'terrible',emoji: '😢' },
+            ] as const).map(({ mood, emoji }) => (
+              <TouchableOpacity
+                key={mood}
+                style={[
+                  styles.moodButton,
+                  selectedMood === mood && {
+                    backgroundColor: MOOD_COLORS[mood],
+                    borderColor: MOOD_COLORS[mood],
+                  },
+                ]}
+                onPress={() => handleMoodSelect(mood)}
+                activeOpacity={0.7}>
+                <Text style={styles.moodEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </Card>
 
@@ -324,7 +325,7 @@ export default function DashboardScreen() {
             <View style={styles.streakItem}>
               <Text style={styles.streakEmoji}>🏆</Text>
               <Text style={styles.streakValue}>{user?.streak_record || 0}</Text>
-              <Text style={styles.streakLabel}>Record</Text>
+              <Text style={styles.streakLabel}>Meilleure série</Text>
             </View>
           </View>
         </Card>
@@ -439,8 +440,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   greeting: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -513,7 +516,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: QuestifyColors.primary,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 8,
@@ -538,8 +541,10 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   pointsValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
   },
   pointsLabel: {
@@ -562,8 +567,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   streakValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
   },
   streakLabel: {
@@ -596,8 +603,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statValue: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: QuestifyColors.textPrimary,
     marginBottom: 4,
   },
@@ -612,8 +620,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
+    fontFamily: QuestifyFonts.display,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.5,
     color: QuestifyColors.textPrimary,
     marginBottom: 12,
   },
