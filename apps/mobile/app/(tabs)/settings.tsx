@@ -9,6 +9,7 @@ import { QuestifyColors } from '@/mobile/constants/colors';
 import { QuestifyFonts } from '@/mobile/constants/fonts';
 import { Card } from '@/mobile/components/ui/Card';
 import { getApiConfig } from '@/core/types/api';
+import { AVATAR_IDS, AVATAR_DATA_URIS, AVATAR_LABELS, getAvatarDataUri, isSvgAvatar, type AvatarId } from '@/mobile/constants/avatars';
 
 export default function SettingsScreen() {
     const { user, logout } = useAuth();
@@ -23,6 +24,7 @@ export default function SettingsScreen() {
         user?.start_date ? new Date(user.start_date) : new Date()
     );
     const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
     // Helper to get full avatar URL
     const getAvatarUrl = (url: string | undefined): string | undefined => {
@@ -33,6 +35,18 @@ export default function SettingsScreen() {
             return `${baseUrl}${url}`;
         }
         return url;
+    };
+
+    // Pick an SVG avatar from the kit
+    const handleSelectSvgAvatar = async (id: AvatarId) => {
+        const svgValue = `svg:${id}`;
+        setAvatarUrl(svgValue);
+        setShowAvatarPicker(false);
+        try {
+            await updateUser.mutateAsync({ avatar_url: svgValue });
+        } catch (error: any) {
+            Alert.alert('Erreur', error.message || 'Erreur lors de la mise à jour');
+        }
     };
 
     // Update local state when user changes
@@ -185,20 +199,73 @@ export default function SettingsScreen() {
 
         {/* Profile Card */}
         <Card style={styles.profileCard}>
-          <TouchableOpacity onPress={handlePickImage} style={styles.avatarContainer}>
-            {getAvatarUrl(avatarUrl) ? (
-              <Image source={{ uri: getAvatarUrl(avatarUrl) }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+          {/* Avatar display */}
+          {isSvgAvatar(avatarUrl) ? (
+            <TouchableOpacity onPress={() => setShowAvatarPicker(!showAvatarPicker)} style={styles.avatarContainer}>
+              <Image
+                source={{ uri: getAvatarDataUri(avatarUrl) }}
+                style={styles.avatarImage}
+              />
+              <View style={styles.editAvatarBadge}>
+                <Text style={styles.editAvatarText}>✏️</Text>
               </View>
-            )}
-            <View style={styles.editAvatarBadge}>
-              <Text style={styles.editAvatarText}>✏️</Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handlePickImage} style={styles.avatarContainer}>
+              {getAvatarUrl(avatarUrl) ? (
+                <Image source={{ uri: getAvatarUrl(avatarUrl) }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+                </View>
+              )}
+              <View style={styles.editAvatarBadge}>
+                <Text style={styles.editAvatarText}>✏️</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.name}>{user?.name || 'Utilisateur'}</Text>
           <Text style={styles.email}>{user?.email || 'email@example.com'}</Text>
+
+          {/* Points + streak pill */}
+          <View style={styles.statsPill}>
+            <Text style={styles.statsPillText}>
+              ⭐ {(user?.total_points ?? 0).toLocaleString('fr-FR')} · 🔥 {user?.streak_current ?? 0} j
+            </Text>
+          </View>
+        </Card>
+
+        {/* SVG Avatar picker */}
+        <Card style={styles.avatarPickerCard}>
+          <Text style={styles.avatarPickerTitle}>Choisis ton avatar</Text>
+          <Text style={styles.avatarPickerSub}>12 personnages aux couleurs de Questify</Text>
+          <View style={styles.avatarGrid}>
+            {AVATAR_IDS.map((id) => {
+              const isSelected = avatarUrl === `svg:${id}` || avatarUrl === id;
+              return (
+                <TouchableOpacity
+                  key={id}
+                  onPress={() => handleSelectSvgAvatar(id)}
+                  style={[styles.avatarGridItem, isSelected && styles.avatarGridItemSelected]}
+                  activeOpacity={0.7}
+                >
+                  <Image
+                    source={{ uri: AVATAR_DATA_URIS[id] }}
+                    style={styles.avatarGridImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {/* Upload button */}
+          <TouchableOpacity
+            onPress={handlePickImage}
+            style={styles.uploadButton}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.uploadButtonText}>📤 Utiliser une photo</Text>
+          </TouchableOpacity>
         </Card>
 
         {/* Settings List */}
@@ -393,6 +460,72 @@ const styles = StyleSheet.create({
   },
   email: {
     fontSize: 16,
+    color: QuestifyColors.textSecondary,
+    marginBottom: 10,
+  },
+  statsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: QuestifyColors.primaryLight,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginTop: 6,
+  },
+  statsPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: QuestifyColors.primaryDark,
+  },
+  avatarPickerCard: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 16,
+  },
+  avatarPickerTitle: {
+    fontFamily: QuestifyFonts.display,
+    fontSize: 16,
+    fontWeight: '800',
+    color: QuestifyColors.textPrimary,
+    marginBottom: 4,
+  },
+  avatarPickerSub: {
+    fontSize: 12,
+    color: QuestifyColors.textSecondary,
+    marginBottom: 14,
+  },
+  avatarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'flex-start',
+  },
+  avatarGridItem: {
+    width: '22%',
+    aspectRatio: 1,
+    borderRadius: 16,
+    padding: 3,
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  avatarGridItemSelected: {
+    borderColor: QuestifyColors.primary,
+  },
+  avatarGridImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  uploadButton: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: QuestifyColors.backgroundLight,
+    alignItems: 'center',
+  },
+  uploadButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: QuestifyColors.textSecondary,
   },
   statsCard: {

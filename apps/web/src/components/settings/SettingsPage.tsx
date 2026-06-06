@@ -3,6 +3,14 @@ import { useAuth } from '@core/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { getAvatarUrl, getAvatarBg } from '@core/utils/avatar';
 
+// ── SVG avatar kit ──────────────────────────────────────────────────────────
+const SVG_AVATAR_IDS = ['fox','star','cat','rabbit','panda','bear','owl','smiley','robot','heart','leaf','cactus'] as const;
+type SvgAvatarId = typeof SVG_AVATAR_IDS[number];
+const SVG_AVATAR_LABELS: Record<SvgAvatarId, string> = {
+    fox:'Renard', star:'Étoile', cat:'Chat', rabbit:'Lapin', panda:'Panda', bear:'Ours',
+    owl:'Hibou', smiley:'Sourire', robot:'Robot', heart:'Cœur', leaf:'Feuille', cactus:'Cactus',
+};
+
 const AVATAR_EMOJIS = [
     // Visages
     '👤', '😃', '😁', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍',
@@ -193,7 +201,7 @@ export function SettingsPage() {
                         </div>
                         <div style={{ marginBottom: '16px' }}>
                             <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '4px' }}>Avatar</div>
-                            {user?.avatar_url && (user.avatar_url.startsWith('/') || user.avatar_url.startsWith('http')) ? (
+                            {user?.avatar_url && (user.avatar_url.startsWith('svg:') || user.avatar_url.startsWith('/avatars/') || user.avatar_url.startsWith('/') || user.avatar_url.startsWith('http')) ? (
                                 <img
                                     src={getAvatarUrl(user.avatar_url)}
                                     alt="Avatar"
@@ -264,9 +272,9 @@ export function SettingsPage() {
                             <label>Avatar</label>
                             {/* Preview */}
                             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
-                                {avatarEmoji && (avatarEmoji.startsWith('/') || avatarEmoji.startsWith('http')) ? (
+                                {avatarEmoji && (avatarEmoji.startsWith('/') || avatarEmoji.startsWith('http') || avatarEmoji.startsWith('svg:')) ? (
                                     <img
-                                        src={avatarEmoji}
+                                        src={avatarEmoji.startsWith('svg:') ? `/avatars/${avatarEmoji.slice(4)}.svg` : avatarEmoji}
                                         alt="Avatar"
                                         style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E5E5E5' }}
                                     />
@@ -301,6 +309,47 @@ export function SettingsPage() {
                                     >
                                         😊 Emoji
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* ── SVG Avatar picker ── */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '10px', fontWeight: 600 }}>
+                                    Personnages Questify
+                                </div>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(6, 1fr)',
+                                    gap: '10px',
+                                }}>
+                                    {SVG_AVATAR_IDS.map((id) => {
+                                        const svgPath = `/avatars/${id}.svg`;
+                                        const isSelected = avatarEmoji === svgPath;
+                                        return (
+                                            <button
+                                                key={id}
+                                                type="button"
+                                                title={SVG_AVATAR_LABELS[id]}
+                                                onClick={() => { setAvatarEmoji(svgPath); setAvatarBg(''); setIsEmojiPickerOpen(false); }}
+                                                style={{
+                                                    padding: '4px',
+                                                    borderRadius: '16px',
+                                                    cursor: 'pointer',
+                                                    background: 'transparent',
+                                                    border: `3px solid ${isSelected ? '#C8B7E8' : 'transparent'}`,
+                                                    transition: 'border-color 0.15s',
+                                                    lineHeight: 0,
+                                                    boxShadow: isSelected ? '0 0 0 1px #C8B7E8' : 'none',
+                                                }}
+                                            >
+                                                <img
+                                                    src={svgPath}
+                                                    alt={SVG_AVATAR_LABELS[id]}
+                                                    style={{ width: '100%', borderRadius: '12px', display: 'block' }}
+                                                />
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
