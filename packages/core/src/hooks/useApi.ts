@@ -20,13 +20,13 @@ export const queryKeys = {
     frequencies: ['frequencies'] as const,
     validations : ['validations'] as const,
     validation: (id: string) => ['validation', id] as const,
-    validationsHistory: ['validationsHistory'] as const,
+    validationsHistory: (days: number) => ['validationsHistory', days] as const,
     weeklyOverview: ['weeklyOverview'] as const,
     dailyOverview: ['dailyOverview'] as const,
     dailyMood: (date: string) => ['dailyMood', date] as const,
-    dailyMoodHistory: ['dailyMoodHistory'] as const,
+    dailyMoodHistory: (days: number) => ['dailyMoodHistory', days] as const,
     positiveThings: (date: string) => ['positiveThings', date] as const,
-    positiveThingsHistory: ['positiveThingsHistory'] as const,
+    positiveThingsHistory: (days: number) => ['positiveThingsHistory', days] as const,
     users: ['users'] as const,
     teams: ['teams'] as const,
     team: (id: string) => ['teams', id] as const,
@@ -162,6 +162,11 @@ export function useEditQuest() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<any> }) => api.quests.edit(id, data),
+        onSuccess: (updatedQuest, { id }) => {
+            queryClient.setQueryData<any[]>(queryKeys.quests, (old) =>
+                old?.map((q) => (q.id === id ? { ...q, ...updatedQuest } : q))
+            );
+        },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.quests });
         },
@@ -286,7 +291,7 @@ export function useDailyOverview() {
 export function useValidationsHistory(days: number = 30) {
     const { isAuthReady, isLoggedIn } = useAuth();
     return useQuery({
-        queryKey: queryKeys.validationsHistory,
+        queryKey: queryKeys.validationsHistory(days),
         queryFn: () => api.validations.getHistory(days),
         retry: false, // Don't retry if endpoint doesn't exist
         meta: {
@@ -326,7 +331,7 @@ export function useCreateValidation() {
             queryClient.invalidateQueries({ queryKey: queryKeys.validations });
             queryClient.invalidateQueries({ queryKey: queryKeys.dailyOverview });
             queryClient.invalidateQueries({ queryKey: queryKeys.weeklyOverview });
-            queryClient.invalidateQueries({ queryKey: queryKeys.validationsHistory });
+            queryClient.invalidateQueries({ queryKey: ['validationsHistory'] });
         },
     });
 }
@@ -336,7 +341,7 @@ export function useCreateValidation() {
 export function useDailyMoodHistory(days: number = 30) {
     const { isAuthReady, isLoggedIn } = useAuth();
     return useQuery({
-        queryKey: queryKeys.dailyMoodHistory,
+        queryKey: queryKeys.dailyMoodHistory(days),
         queryFn: () => api.wellness.getDailyMoodHistory(days),
         enabled: isAuthReady && isLoggedIn,
     });
@@ -347,7 +352,7 @@ export function useCreateOrUpdateDailyMood() {
     return useMutation({
         mutationFn: (data: CreateDailyMoodRequest) => api.wellness.createOrUpdateDailyMood(data),
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.dailyMoodHistory });
+            queryClient.invalidateQueries({ queryKey: ['dailyMoodHistory'] });
         },
     });
 }
@@ -355,7 +360,7 @@ export function useCreateOrUpdateDailyMood() {
 export function usePositiveThingsHistory(days: number = 30) {
     const { isAuthReady, isLoggedIn } = useAuth();
     return useQuery({
-        queryKey: queryKeys.positiveThingsHistory,
+        queryKey: queryKeys.positiveThingsHistory(days),
         queryFn: () => api.wellness.getPositiveThingsHistory(days),
         enabled: isAuthReady && isLoggedIn,
     });
@@ -366,7 +371,7 @@ export function useCreateOrUpdatePositiveThings() {
     return useMutation({
         mutationFn: (data: CreatePositiveThingsRequest) => api.wellness.createOrUpdatePositiveThings(data),
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.positiveThingsHistory });
+            queryClient.invalidateQueries({ queryKey: ['positiveThingsHistory'] });
         },
     });
 }

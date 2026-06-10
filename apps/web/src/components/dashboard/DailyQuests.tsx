@@ -485,7 +485,24 @@ export function DailyQuests({ isLoading = false, onNavigateToQuests }: DailyQues
                     {isLoading ? (
                         <p style={{ color: '#6B6B6B', textAlign: 'center' }}>Chargement...</p>
                     ) : filteredQuests?.length === 0 ? (
-                        <p style={{ color: '#6B6B6B', textAlign: 'center' }}>Aucune quête trouvée</p>
+                        <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                            <p style={{ color: '#6B6B6B', marginBottom: '16px' }}>Aucune quête trouvée</p>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => onNavigateToQuests?.()}
+                                style={{
+                                    padding: '12px 24px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    backgroundColor: '#C8B7E8',
+                                    color: '#1A1A1A',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                ➕ Créer un objectif
+                            </button>
+                        </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {filteredQuests?.map((quest, index) => {

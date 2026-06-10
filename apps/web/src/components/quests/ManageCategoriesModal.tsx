@@ -95,9 +95,13 @@ export function ManageCategoriesModal({ isOpen, onClose }: ManageCategoriesModal
     };
 
     const handleDelete = async (id: string) => {
+        if (!window.confirm('Supprimer cette catégorie ?')) {
+            return;
+        }
         try {
             await deleteCategory.mutateAsync(id);
-        } catch (error) {
+        } catch (error: any) {
+            alert(error?.message || 'Erreur lors de la suppression de la catégorie');
         }
     };
 

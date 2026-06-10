@@ -36,6 +36,7 @@ export function BoardPage() {
     // Get Monday of the week for a given date
     const getWeekStart = (date: Date): Date => {
         const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
         const day = d.getDay();
         const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
         return new Date(d.setDate(diff));
@@ -60,7 +61,7 @@ export function BoardPage() {
 
         // Get active quests
         const activeQuests = data?.quests?.filter((q: any) => q.is_active) || [];
-        const dailyQuests = activeQuests.filter((q: any) => q.frequency === 'daily');
+        const dailyQuests = activeQuests.filter((q: any) => q.frequency === 'Journalier');
 
         // Build a map of UNIQUE quest_ids validated per date
         // (one quest can be validated multiple times in a day — we count distinct quests)

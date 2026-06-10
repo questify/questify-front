@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 80" width="380" height="80">
+  <defs>
+    <linearGradient id="qg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C8B7E8"></stop>
+      <stop offset="100%" stop-color="#9B7DC8"></stop>
+    </linearGradient>
+    
+  </defs>
+  
+  <rect x="4" y="14" width="52" height="52" rx="12" fill="url(#qg)"></rect>
+  <text x="30" y="52" text-anchor="middle" class="wordmark" font-size="34" fill="#FFFFFF">Q</text>
+  
+  <text x="72" y="52" class="wordmark">QUESTIFY</text>
+</svg>
