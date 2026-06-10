@@ -44,9 +44,13 @@ export function SettingsPage() {
     // Profile form state
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
-    const [avatarEmoji, setAvatarEmoji] = useState(() => getAvatarUrl(user?.avatar_url) || '👤');
+    const [avatarEmoji, setAvatarEmoji] = useState(() => {
+        const av = user?.avatar_url;
+        if (av?.startsWith('svg:')) return av; // keep "svg:fox" format as-is
+        return getAvatarUrl(av) || '👤';
+    });
     const [avatarBg, setAvatarBg] = useState(() => getAvatarBg(user?.avatar_url) || '');
-    const [startDate, setStartDate] = useState(user?.start_date || '');
+    const [startDate, setStartDate] = useState(user?.start_date?.slice(0, 10) || '');
 
     // Derive combined avatar_url for API
     const avatarUrl = avatarEmoji && !avatarEmoji.startsWith('http') && !avatarEmoji.startsWith('/')
@@ -107,16 +111,21 @@ export function SettingsPage() {
             setNewPassword('');
             setConfirmPassword('');
         } catch (error) {
-            toast.error('Erreur lors du changement de mot de passe');
+            if (error instanceof Error && error.message.includes('incorrect')) {
+                toast.error('Mot de passe actuel incorrect');
+            } else {
+                toast.error('Erreur lors du changement de mot de passe');
+            }
         }
     };
 
     const handleCancelProfile = () => {
         setName(user?.name || '');
         setEmail(user?.email || '');
-        setAvatarEmoji(getAvatarUrl(user?.avatar_url) || '👤');
+        const av = user?.avatar_url;
+        setAvatarEmoji(av?.startsWith('svg:') ? av : (getAvatarUrl(av) || '👤'));
         setAvatarBg(getAvatarBg(user?.avatar_url) || '');
-        setStartDate(user?.start_date || '');
+        setStartDate(user?.start_date?.slice(0, 10) || '');
         setIsEditingProfile(false);
     };
 
@@ -274,9 +283,9 @@ export function SettingsPage() {
                             <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '12px' }}>
                                 {avatarEmoji && (avatarEmoji.startsWith('/') || avatarEmoji.startsWith('http') || avatarEmoji.startsWith('svg:')) ? (
                                     <img
-                                        src={avatarEmoji.startsWith('svg:') ? `/avatars/${avatarEmoji.slice(4)}.svg` : avatarEmoji}
+                                        src={getAvatarUrl(avatarEmoji)}
                                         alt="Avatar"
-                                        style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E5E5E5' }}
+                                        style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: avatarEmoji.startsWith('svg:') ? 'contain' : 'cover', border: '2px solid #E5E5E5' }}
                                     />
                                 ) : (
                                     <div style={{
@@ -323,14 +332,15 @@ export function SettingsPage() {
                                     gap: '10px',
                                 }}>
                                     {SVG_AVATAR_IDS.map((id) => {
-                                        const svgPath = `/avatars/${id}.svg`;
-                                        const isSelected = avatarEmoji === svgPath;
+                                        const svgRef = `svg:${id}`;         // canonical format saved to API
+                                        const svgPath = `/avatars/${id}.svg`; // only for <img src>
+                                        const isSelected = avatarEmoji === svgRef;
                                         return (
                                             <button
                                                 key={id}
                                                 type="button"
                                                 title={SVG_AVATAR_LABELS[id]}
-                                                onClick={() => { setAvatarEmoji(svgPath); setAvatarBg(''); setIsEmojiPickerOpen(false); }}
+                                                onClick={() => { setAvatarEmoji(svgRef); setAvatarBg(''); setIsEmojiPickerOpen(false); }}
                                                 style={{
                                                     padding: '4px',
                                                     borderRadius: '16px',
@@ -386,8 +396,8 @@ export function SettingsPage() {
                                 </div>
                             )}
 
-                            {/* Background color picker (only for emoji avatars) */}
-                            {!(avatarEmoji?.startsWith('/') || avatarEmoji?.startsWith('http')) && (
+                            {/* Background color picker (only for emoji avatars, not SVG kit or uploads) */}
+                            {!(avatarEmoji?.startsWith('/') || avatarEmoji?.startsWith('http') || avatarEmoji?.startsWith('svg:')) && (
                                 <div>
                                     <div style={{ fontSize: '13px', color: '#6B6B6B', marginBottom: '8px', fontWeight: 500 }}>
                                         Couleur de fond

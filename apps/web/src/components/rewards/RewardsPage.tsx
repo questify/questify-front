@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useRewards, usePurchaseReward } from '@core/hooks/useApi';
+import { useRewards, usePurchaseReward, useDeleteReward } from '@core/hooks/useApi';
 import { useAuth } from '@core/contexts/AuthContext';
 import { CreateRewardModal } from './CreateRewardModal';
+import { EditRewardModal } from './EditRewardModal';
 import { RewardCard } from './RewardCard';
 import { Reward } from '@core/types/api';
 import toast from 'react-hot-toast';
@@ -13,9 +14,12 @@ export function RewardsPage() {
     const { data: rewards } = useRewards();
     const { user, updateUser } = useAuth();
     const purchaseReward = usePurchaseReward();
+    const deleteReward = useDeleteReward();
 
     const [activeTab, setActiveTab] = useState<TabType>('gifts');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingReward, setEditingReward] = useState<Reward | null>(null);
+    const [deletingReward, setDeletingReward] = useState<Reward | null>(null);
     const [confirmPurchaseModal, setConfirmPurchaseModal] = useState<{isOpen: boolean; rewardId: string | null; cost: number; rewardTitle: string; rewardIcon: string} | null>(null);
 
     // Calculate user points (default to 0 if not available)
@@ -97,6 +101,21 @@ export function RewardsPage() {
         });
     };
 
+    const handleConfirmDelete = () => {
+        if (!deletingReward) return;
+
+        deleteReward.mutate(deletingReward.id, {
+            onSuccess: () => {
+                toast.success('Récompense supprimée');
+                setDeletingReward(null);
+            },
+            onError: () => {
+                toast.error('Erreur lors de la suppression de la récompense');
+                setDeletingReward(null);
+            }
+        });
+    };
+
     const renderTierSection = (tier: RewardTier, title: string, color: string, emoji: string) => {
         const tierRewards = groupedRewards[tier];
 
@@ -124,6 +143,8 @@ export function RewardsPage() {
                             userPoints={userPoints}
                             isPurchasing={purchaseReward.isPending}
                             onPurchase={handlePurchase}
+                            onEdit={setEditingReward}
+                            onDelete={setDeletingReward}
                         />
                     ))}
                 </div>
@@ -443,6 +464,103 @@ export function RewardsPage() {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
             />
+
+            {/* Edit Reward Modal */}
+            <EditRewardModal
+                reward={editingReward}
+                isOpen={editingReward !== null}
+                onClose={() => setEditingReward(null)}
+            />
+
+            {/* Delete Reward Confirmation Modal */}
+            {deletingReward && (
+                <div
+                    className="modal-overlay"
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                    }}
+                    onClick={() => !deleteReward.isPending && setDeletingReward(null)}
+                >
+                    <div
+                        className="modal"
+                        style={{
+                            backgroundColor: 'white',
+                            borderRadius: '20px',
+                            padding: '0',
+                            maxWidth: '420px',
+                            width: '90%',
+                            overflow: 'hidden',
+                            boxShadow: '0 8px 40px rgba(0, 0, 0, 0.18)',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{
+                            background: 'linear-gradient(135deg, #FFF5F5 0%, #FFD1C1 100%)',
+                            padding: '28px 32px 24px',
+                            textAlign: 'center',
+                        }}>
+                            <div style={{ fontSize: '56px', marginBottom: '8px' }}>
+                                {deletingReward.svg_icon || '🎁'}
+                            </div>
+                            <h3 style={{ color: '#1A1A1A', fontSize: '18px', fontWeight: 700, margin: 0 }}>
+                                {deletingReward.title}
+                            </h3>
+                        </div>
+
+                        <div style={{ padding: '24px 32px 28px' }}>
+                            <p style={{ textAlign: 'center', color: '#6B6B6B', fontSize: '14px', marginBottom: '24px' }}>
+                                Voulez-vous vraiment supprimer cette récompense ? Cette action est irréversible.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setDeletingReward(null)}
+                                    disabled={deleteReward.isPending}
+                                    style={{
+                                        flex: 1,
+                                        padding: '13px',
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        backgroundColor: '#F5F5F5',
+                                        color: '#6B6B6B',
+                                        fontWeight: 600,
+                                        cursor: deleteReward.isPending ? 'not-allowed' : 'pointer',
+                                        fontSize: '15px',
+                                    }}
+                                >
+                                    Annuler
+                                </button>
+                                <button
+                                    onClick={handleConfirmDelete}
+                                    disabled={deleteReward.isPending}
+                                    style={{
+                                        flex: 2,
+                                        padding: '13px',
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        background: deleteReward.isPending ? '#E0E0E0' : '#FFD1C1',
+                                        color: deleteReward.isPending ? '#A0A0A0' : '#1A1A1A',
+                                        fontWeight: 700,
+                                        cursor: deleteReward.isPending ? 'not-allowed' : 'pointer',
+                                        fontSize: '15px',
+                                    }}
+                                >
+                                    {deleteReward.isPending ? 'Suppression...' : '🗑️ Supprimer'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Confirmation Modal - redesigned */}
             {confirmPurchaseModal?.isOpen && (

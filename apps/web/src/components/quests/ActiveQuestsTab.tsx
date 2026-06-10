@@ -7,7 +7,7 @@ interface ActiveQuestsTabProps {
     categories?: Category[];
     frequencies?: Frequency[];
     validatedQuests: Set<string>;
-    onOpenConfirmationModal: (questId: string, points: number) => void;
+    onOpenConfirmationModal: (quest: Quest) => void;
     onToggleQuestActive: (questId: string, currentStatus: boolean) => void;
     isValidating: boolean;
     isUpdating: boolean;
@@ -119,7 +119,9 @@ export function ActiveQuestsTab({
                         Aucune quête active trouvée. Crée ta première quête !
                     </p>
                 ) : (
-                    filteredQuests?.map((quest) => (
+                    filteredQuests?.map((quest) => {
+                    const alreadyValidated = (quest.validations_today?.length || 0) > 0 || validatedQuests.has(quest.id);
+                    return (
                         <div
                             key={quest.id}
                             className="card"
@@ -128,7 +130,7 @@ export function ActiveQuestsTab({
                                 borderRadius: '12px',
                                 backgroundColor: 'white',
                                 border: '1px solid #E0E0E0',
-                                borderLeft: validatedQuests.has(quest.id) ? '4px solid #C8EAD3' : '1px solid #E0E0E0',
+                                borderLeft: alreadyValidated ? '4px solid #C8EAD3' : '1px solid #E0E0E0',
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -196,20 +198,20 @@ export function ActiveQuestsTab({
                                             </button>
                                             <button
                                                 className="btn btn-primary objective-validate"
-                                                onClick={() => onOpenConfirmationModal(quest.id, quest.points)}
-                                                disabled={isValidating}
+                                                onClick={() => onOpenConfirmationModal(quest)}
+                                                disabled={isValidating || alreadyValidated}
                                                 style={{
                                                     padding: '12px 24px',
                                                     borderRadius: '8px',
                                                     border: 'none',
-                                                    backgroundColor: validatedQuests.has(quest.id) ? '#C8EAD3' : '#C8B7E8',
-                                                    color: validatedQuests.has(quest.id) ? '#5BA073' : '#1A1A1A',
+                                                    backgroundColor: alreadyValidated ? '#C8EAD3' : '#C8B7E8',
+                                                    color: alreadyValidated ? '#5BA073' : '#1A1A1A',
                                                     fontWeight: 600,
-                                                    cursor: isValidating ? 'not-allowed' : 'pointer',
+                                                    cursor: (isValidating || alreadyValidated) ? 'not-allowed' : 'pointer',
                                                     opacity: isValidating ? 0.7 : 1,
                                                 }}
                                             >
-                                                ✓ Valider
+                                                {alreadyValidated ? '✓ Validée' : '✓ Valider'}
                                             </button>
                                             <button
                                                 onClick={() => onToggleQuestActive(quest.id, quest.is_active)}
@@ -232,7 +234,8 @@ export function ActiveQuestsTab({
                                 </div>
                             </div>
                         </div>
-                    ))
+                    );
+                    })
                 )}
             </div>
 

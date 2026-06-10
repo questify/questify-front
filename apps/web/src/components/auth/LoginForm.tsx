@@ -1,5 +1,23 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '@core/contexts/AuthContext';
+
+function getAuthErrorMessage(error: unknown, isRegister: boolean): string {
+  const message = error instanceof Error ? error.message : '';
+
+  if (message.includes('already registered') || message.includes('already in use')) {
+    return 'Cet email est déjà utilisé';
+  }
+  if (message.includes('Invalid email or password')) {
+    return 'Email ou mot de passe incorrect';
+  }
+  if (message) {
+    return message;
+  }
+  return isRegister
+    ? "Erreur lors de la création du compte"
+    : 'Erreur lors de la connexion';
+}
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -16,8 +34,8 @@ export function LoginForm() {
       } else {
         await login(email, password);
       }
-    } catch {
-      // Error is handled by AuthContext (toast)
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error, showRegister));
     }
   };
 

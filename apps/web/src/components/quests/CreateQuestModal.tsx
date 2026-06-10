@@ -7,14 +7,14 @@ interface CreateQuestModalProps {
 }
 
 const QUEST_TEMPLATES = [
-    { svg_icon: '🏃', title: 'Course à pied 30 min', description: 'Courir pendant au moins 30 minutes', frequency: 'daily' as const, points: 50, malus: 10 },
-    { svg_icon: '💧', title: 'Boire 2L d\'eau', description: '', frequency: 'daily' as const, points: 20, malus: 5 },
-    { svg_icon: '📚', title: 'Lecture 20 min', description: 'Lire un livre ou un article', frequency: 'daily' as const, points: 30, malus: 0 },
-    { svg_icon: '🧘', title: 'Méditation 10 min', description: '10 minutes de pleine conscience', frequency: 'daily' as const, points: 25, malus: 0 },
-    { svg_icon: '💪', title: 'Séance de sport', description: 'Entraînement ou renforcement musculaire', frequency: 'weekly' as const, points: 80, malus: 20 },
-    { svg_icon: '🥗', title: 'Repas équilibré', description: 'Manger un repas sain et équilibré', frequency: 'daily' as const, points: 15, malus: 5 },
-    { svg_icon: '😴', title: 'Dormir 8h', description: 'Aller au lit avant 23h', frequency: 'daily' as const, points: 30, malus: 10 },
-    { svg_icon: '📝', title: 'Journaling', description: 'Écrire dans son journal', frequency: 'daily' as const, points: 20, malus: 0 },
+    { svg_icon: '🏃', title: 'Course à pied 30 min', description: 'Courir pendant au moins 30 minutes', frequency: 'Journalier', points: 50, malus: 10 },
+    { svg_icon: '💧', title: 'Boire 2L d\'eau', description: '', frequency: 'Journalier', points: 20, malus: 5 },
+    { svg_icon: '📚', title: 'Lecture 20 min', description: 'Lire un livre ou un article', frequency: 'Journalier', points: 30, malus: 0 },
+    { svg_icon: '🧘', title: 'Méditation 10 min', description: '10 minutes de pleine conscience', frequency: 'Journalier', points: 25, malus: 0 },
+    { svg_icon: '💪', title: 'Séance de sport', description: 'Entraînement ou renforcement musculaire', frequency: 'Hebdomadaire', points: 80, malus: 20 },
+    { svg_icon: '🥗', title: 'Repas équilibré', description: 'Manger un repas sain et équilibré', frequency: 'Journalier', points: 15, malus: 5 },
+    { svg_icon: '😴', title: 'Dormir 8h', description: 'Aller au lit avant 23h', frequency: 'Journalier', points: 30, malus: 10 },
+    { svg_icon: '📝', title: 'Journaling', description: 'Écrire dans son journal', frequency: 'Journalier', points: 20, malus: 0 },
 ];
 
 const PRESET_EMOJIS = [
@@ -38,16 +38,18 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
     const { data: frequencies } = useFrequencies();
     const createQuest = useCreateQuest();
 
-    const [formData, setFormData] = useState({
+    const initialFormData = {
         svg_icon: PRESET_EMOJIS[0], // Pré-sélectionner le premier emoji
         title: '',
         description: '',
         category_id: '',
-        frequency: '' as 'daily' | 'weekly' | 'monthly' | '',
+        frequency: '',
         is_private: false,
         points: 0,
         malus: 0,
-    });
+    };
+
+    const [formData, setFormData] = useState(initialFormData);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -75,20 +77,16 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
             });
 
             // Reset form and close modal
-            setFormData({
-                svg_icon: PRESET_EMOJIS[0],
-                title: '',
-                description: '',
-                category_id: '',
-                frequency: '',
-                is_private: false,
-                points: 0,
-                malus: 0,
-            });
+            setFormData(initialFormData);
             onClose();
         } catch (error) {
             alert('Erreur lors de la création de la quête');
         }
+    };
+
+    const handleCancel = () => {
+        setFormData(initialFormData);
+        onClose();
     };
 
     if (!isOpen) return null;
@@ -108,7 +106,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                 justifyContent: 'center',
                 zIndex: 1000,
             }}
-            onClick={onClose}
+            onClick={handleCancel}
         >
             <div
                 className="modal"
@@ -289,7 +287,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                             onChange={(e) =>
                                 setFormData({
                                     ...formData,
-                                    frequency: e.target.value as 'daily' | 'weekly' | 'monthly',
+                                    frequency: e.target.value,
                                 })
                             }
                             required
@@ -388,7 +386,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                         <button
                             type="button"
                             className="btn btn-outline"
-                            onClick={onClose}
+                            onClick={handleCancel}
                             style={{
                                 flex: 1,
                                 padding: '12px',

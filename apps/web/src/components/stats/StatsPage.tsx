@@ -120,7 +120,7 @@ export function StatsPage() {
     const successRate = useMemo(() => {
         if (history.length === 0) return 0;
         // Approximate: count unique (date, quest_id) validated vs days active * daily quests
-        const dailyQuests = quests.filter((q: any) => q.is_active && q.frequency === 'daily');
+        const dailyQuests = quests.filter((q: any) => q.is_active && q.frequency === 'Journalier');
         const start = user?.start_date ? new Date(user.start_date) : new Date(Date.now() - 30 * 86400000);
         const daysSinceStart = Math.max(1, Math.floor((Date.now() - start.getTime()) / 86400000));
         const possibleDailyValidations = dailyQuests.length * daysSinceStart;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCategories, useFrequencies, useQuests, useCreateValidation, useUpdateQuest } from '@core/hooks/useApi';
+import { Quest } from '@core/types/api';
 import { useAuth } from '@core/contexts/AuthContext';
 import { CreateQuestModal } from './CreateQuestModal';
 import { CreateCategoryModal } from './CreateCategoryModal';
@@ -21,21 +22,25 @@ export function QuestsPage() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isManageCategoriesModalOpen, setIsManageCategoriesModalOpen] = useState(false);
     const [validatedQuests, setValidatedQuests] = useState<Set<string>>(new Set());
-    const [confirmationModal, setConfirmationModal] = useState<{ isOpen: boolean; questId: string | null; points: number }>({
+    const [confirmationModal, setConfirmationModal] = useState<{ isOpen: boolean; questId: string | null; questTitle: string; points: number; validationsToday: number }>({
         isOpen: false,
         questId: null,
+        questTitle: '',
         points: 0,
+        validationsToday: 0,
     });
 
     // Filter quests based on active tab
     const activeQuests = quests?.filter((quest) => quest.is_active) || [];
     const archivedQuests = quests?.filter((quest) => !quest.is_active) || [];
 
-    const openConfirmationModal = (questId: string, points: number) => {
+    const openConfirmationModal = (quest: Quest) => {
         setConfirmationModal({
             isOpen: true,
-            questId,
-            points,
+            questId: quest.id,
+            questTitle: quest.title,
+            points: quest.points,
+            validationsToday: quest.validations_today?.length || 0,
         });
     };
 
@@ -43,7 +48,9 @@ export function QuestsPage() {
         setConfirmationModal({
             isOpen: false,
             questId: null,
+            questTitle: '',
             points: 0,
+            validationsToday: 0,
         });
     };
 
@@ -216,6 +223,8 @@ export function QuestsPage() {
             <ConfirmValidationModal
                 isOpen={confirmationModal.isOpen}
                 points={confirmationModal.points}
+                questTitle={confirmationModal.questTitle}
+                validationsToday={confirmationModal.validationsToday}
                 isPending={createValidation.isPending}
                 onConfirm={confirmValidation}
                 onCancel={closeConfirmationModal}

@@ -20,6 +20,11 @@ export function getAvatarUrl(avatarUrl: string | undefined): string {
         return `/avatars/${id}.svg`;
     }
 
+    // Handle legacy path format "/avatars/fox.svg" — serve directly from Vite public/
+    if (/^\/avatars\/[a-z]+\.svg$/.test(avatarUrl)) {
+        return avatarUrl;
+    }
+
     // Handle "emoji|color" format — return just the emoji part
     if (avatarUrl.includes('|') && !avatarUrl.startsWith('http')) {
         return avatarUrl.split('|')[0];
@@ -57,14 +62,20 @@ export function getAvatarBg(avatarUrl: string | undefined): string | undefined {
 export function isAvatarImage(avatarUrl: string | undefined): boolean {
     if (!avatarUrl) return false;
     if (avatarUrl.startsWith('svg:')) return false; // SVG kit — use <img src="/avatars/id.svg">
+    if (/^\/avatars\/[a-z]+\.svg$/.test(avatarUrl)) return false; // legacy path — also SVG kit
     return avatarUrl.startsWith('/uploads') || avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://');
 }
 
 /**
- * Check if an avatar is from the Questify SVG kit ("svg:fox" format or bare id).
+ * Check if an avatar is from the Questify SVG kit.
+ * Handles: "svg:fox" (canonical), "/avatars/fox.svg" (legacy path), bare "fox" id.
  */
 export function isSvgKitAvatar(avatarUrl: string | undefined): boolean {
     if (!avatarUrl) return false;
     if (avatarUrl.startsWith('svg:')) return true;
+    // Legacy path format "/avatars/fox.svg"
+    const pathMatch = avatarUrl.match(/^\/avatars\/([a-z]+)\.svg$/);
+    if (pathMatch) return (SVG_AVATAR_IDS as readonly string[]).includes(pathMatch[1]);
+    // Bare id "fox"
     return (SVG_AVATAR_IDS as readonly string[]).includes(avatarUrl);
 }

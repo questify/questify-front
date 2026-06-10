@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
     useTeams,
     useTeamMembers,
@@ -12,9 +12,10 @@ import {
     useTeamChallenges,
     useCreateTeamChallenge,
     useDeleteTeamChallenge,
+    useTeamSharedProgress,
 } from '@core/hooks/useApi';
 import { useAuth } from '@core/contexts/AuthContext';
-import {getAvatarUrl, isAvatarImage} from '@core/utils/avatar';
+import {getAvatarUrl, getAvatarBg, isAvatarImage, isSvgKitAvatar} from '@core/utils/avatar';
 
 
 export function CompetitionPage() {
@@ -31,6 +32,7 @@ export function CompetitionPage() {
     const { data: allUsers, isLoading: usersLoading } = useUsers();
     const { data: quests, isLoading: questsLoading, refetch: refetchQuests } = useQuests();
     const { data: teamChallenges } = useTeamChallenges(selectedTeamId || '');
+    const { data: sharedProgress } = useTeamSharedProgress(selectedTeamId || '');
 
     // Force refetch on mount to bypass cache
     useEffect(() => {
@@ -58,12 +60,15 @@ export function CompetitionPage() {
         }
     }, [teams, selectedTeamId]);
 
-    // Update selected user IDs when team members change
+    // Initialize selected user IDs from team members once per team
+    // (not on every background refetch, so manual selection toggles aren't reverted)
+    const syncedTeamIdRef = useRef<string | null>(null);
     useEffect(() => {
-        if (teamMembers) {
+        if (teamMembers && selectedTeamId && syncedTeamIdRef.current !== selectedTeamId) {
             setSelectedUserIds(teamMembers.map((m: any) => m.id));
+            syncedTeamIdRef.current = selectedTeamId;
         }
-    }, [teamMembers]);
+    }, [teamMembers, selectedTeamId]);
 
     // Update selected quest IDs when team challenges change
     useEffect(() => {
@@ -256,7 +261,7 @@ export function CompetitionPage() {
                                         <React.Fragment key={member.id}>
                                             {index > 0 && <div style={{fontSize: '32px', display: 'flex', alignItems: 'center'}}>🤝</div>}
                                             <div>
-                                                {isAvatarImage(member.avatar_url) ? (
+                                                {isAvatarImage(member.avatar_url) || isSvgKitAvatar(member.avatar_url) ? (
                                                     <img
                                                         src={getAvatarUrl(member.avatar_url)}
                                                         alt={member.name}
@@ -265,13 +270,18 @@ export function CompetitionPage() {
                                                             width: '64px',
                                                             height: '64px',
                                                             borderRadius: '50%',
-                                                            objectFit: 'cover',
+                                                            objectFit: isSvgKitAvatar(member.avatar_url) ? 'contain' : 'cover',
                                                             border: '4px solid rgba(255,255,255,0.3)',
                                                         }}
                                                     />
                                                 ) : (
-                                                    <div className="member-avatar">
-                                                        {member.avatar_url || member.name.charAt(0).toUpperCase()}
+                                                    <div
+                                                        className="member-avatar"
+                                                        style={getAvatarBg(member.avatar_url) ? {
+                                                            background: getAvatarBg(member.avatar_url),
+                                                        } : undefined}
+                                                    >
+                                                        {getAvatarUrl(member.avatar_url) || member.name.charAt(0).toUpperCase()}
                                                     </div>
                                                 )}
                                                 <div style={{marginTop: '8px', fontSize: '14px', fontWeight: 600}}>{member.name}</div>
@@ -289,11 +299,15 @@ export function CompetitionPage() {
                                             <div style={{fontSize: '13px', opacity: 0.9}}>Membres</div>
                                         </div>
                                         <div>
-                                            <div style={{fontSize: '28px', fontWeight: 800, marginBottom: '4px'}}>0</div>
+                                            <div style={{fontSize: '28px', fontWeight: 800, marginBottom: '4px'}}>
+                                                {teamChallenges?.[0]?.quest_ids?.length || 0}
+                                            </div>
                                             <div style={{fontSize: '13px', opacity: 0.9}}>Objectifs partagés</div>
                                         </div>
                                         <div>
-                                            <div style={{fontSize: '28px', fontWeight: 800, marginBottom: '4px'}}>0</div>
+                                            <div style={{fontSize: '28px', fontWeight: 800, marginBottom: '4px'}}>
+                                                {teamChallenges?.[0]?.points || 0}
+                                            </div>
                                             <div style={{fontSize: '13px', opacity: 0.9}}>Points bonus</div>
                                         </div>
                                     </div>
@@ -302,13 +316,105 @@ export function CompetitionPage() {
 
                             <h3 style={{marginBottom: '20px', fontSize: '20px'}}>Objectifs partagés</h3>
 
-                            <div className="card" style={{textAlign: 'center', padding: '60px 40px'}}>
-                                <div style={{fontSize: '64px', marginBottom: '20px'}}>🎯</div>
-                                <h3 style={{fontSize: '24px', marginBottom: '12px'}}>Bientôt disponible</h3>
-                                <p style={{color: '#6B6B6B'}}>
-                                    Les objectifs partagés seront disponibles prochainement
-                                </p>
-                            </div>
+                            {sharedProgress?.quests && sharedProgress.quests.length > 0 ? (
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                                    {sharedProgress.quests.map((quest: any) => (
+                                        <div key={quest.id} className="card" style={{padding: '20px', borderRadius: '12px'}}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px'}}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                                    <span style={{fontSize: '24px'}}>{quest.svg_icon || '🎯'}</span>
+                                                    <div>
+                                                        <div style={{fontWeight: 700, fontSize: '16px'}}>{quest.title}</div>
+                                                        <div style={{fontSize: '12px', color: '#6B6B6B'}}>
+                                                            {quest.category_name} • +{quest.points} pts
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style={{
+                                                    padding: '4px 12px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    backgroundColor: quest.completed_count === quest.total_count ? '#C8EAD3' : '#F0F0F0',
+                                                    color: quest.completed_count === quest.total_count ? '#5BA073' : '#6B6B6B',
+                                                }}>
+                                                    {quest.completed_count}/{quest.total_count} aujourd'hui
+                                                </div>
+                                            </div>
+                                            <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap'}}>
+                                                {quest.members.map((member: any) => (
+                                                    <div key={member.user_id} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', opacity: member.validated_today ? 1 : 0.5}}>
+                                                        <div style={{position: 'relative'}}>
+                                                            {isAvatarImage(member.avatar_url) || isSvgKitAvatar(member.avatar_url) ? (
+                                                                <img
+                                                                    src={getAvatarUrl(member.avatar_url)}
+                                                                    alt={member.name}
+                                                                    style={{
+                                                                        width: '40px',
+                                                                        height: '40px',
+                                                                        borderRadius: '50%',
+                                                                        objectFit: isSvgKitAvatar(member.avatar_url) ? 'contain' : 'cover',
+                                                                        border: member.validated_today ? '2px solid #5BA073' : '2px solid #E0E0E0',
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <div style={{
+                                                                    width: '40px',
+                                                                    height: '40px',
+                                                                    borderRadius: '50%',
+                                                                    background: getAvatarBg(member.avatar_url) || 'linear-gradient(135deg, #C8B7E8 0%, #A996D3 100%)',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    color: 'white',
+                                                                    fontWeight: 700,
+                                                                    fontSize: '16px',
+                                                                    border: member.validated_today ? '2px solid #5BA073' : '2px solid #E0E0E0',
+                                                                }}>
+                                                                    {getAvatarUrl(member.avatar_url) || member.name.charAt(0).toUpperCase()}
+                                                                </div>
+                                                            )}
+                                                            {member.validated_today && (
+                                                                <div style={{
+                                                                    position: 'absolute',
+                                                                    bottom: '-4px',
+                                                                    right: '-4px',
+                                                                    backgroundColor: '#5BA073',
+                                                                    color: 'white',
+                                                                    borderRadius: '50%',
+                                                                    width: '16px',
+                                                                    height: '16px',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '10px',
+                                                                }}>
+                                                                    ✓
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div style={{fontSize: '11px', color: '#6B6B6B'}}>{member.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="card" style={{textAlign: 'center', padding: '60px 40px'}}>
+                                    <div style={{fontSize: '64px', marginBottom: '20px'}}>🎯</div>
+                                    <h3 style={{fontSize: '24px', marginBottom: '12px'}}>Aucun objectif partagé</h3>
+                                    <p style={{color: '#6B6B6B', marginBottom: '24px'}}>
+                                        Choisissez des objectifs communs dans la gestion de l'équipe pour suivre la progression de chacun
+                                    </p>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => setActiveTab('manage')}
+                                    >
+                                        Gérer l'équipe
+                                    </button>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className="card" style={{textAlign: 'center', padding: '60px 40px'}}>
@@ -368,7 +474,7 @@ export function CompetitionPage() {
                                         transition: 'all 0.2s'
                                     }}
                                 >
-                                    {isAvatarImage(otherUser.avatar_url) ? (
+                                    {isAvatarImage(otherUser.avatar_url) || isSvgKitAvatar(otherUser.avatar_url) ? (
                                         <img
                                             src={getAvatarUrl(otherUser.avatar_url)}
                                             alt={otherUser.name}
@@ -376,7 +482,7 @@ export function CompetitionPage() {
                                                 width: '40px',
                                                 height: '40px',
                                                 borderRadius: '50%',
-                                                objectFit: 'cover',
+                                                objectFit: isSvgKitAvatar(otherUser.avatar_url) ? 'contain' : 'cover',
                                             }}
                                         />
                                     ) : (
@@ -384,7 +490,7 @@ export function CompetitionPage() {
                                             width: '40px',
                                             height: '40px',
                                             borderRadius: '50%',
-                                            background: 'linear-gradient(135deg, #C8B7E8 0%, #A996D3 100%)',
+                                            background: getAvatarBg(otherUser.avatar_url) || 'linear-gradient(135deg, #C8B7E8 0%, #A996D3 100%)',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
@@ -392,7 +498,7 @@ export function CompetitionPage() {
                                             fontWeight: 700,
                                             fontSize: '16px'
                                         }}>
-                                            {otherUser.avatar_url || otherUser.name.charAt(0).toUpperCase()}
+                                            {getAvatarUrl(otherUser.avatar_url) || otherUser.name.charAt(0).toUpperCase()}
                                         </div>
                                     )}
                                     <div style={{flex: 1}}>
@@ -419,7 +525,7 @@ export function CompetitionPage() {
                             borderRadius: '12px',
                             padding: '12px'
                         }}>
-                            {quests && quests.filter((q: any) => q.is_active).map((quest: any) => (
+                            {quests && quests.filter((q: any) => q.is_active && !q.is_private).map((quest: any) => (
                                 <div
                                     key={quest.id}
                                     onClick={() => toggleQuestSelection(quest.id)}

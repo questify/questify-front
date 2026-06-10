@@ -1,7 +1,7 @@
 import '../styles/App.css'
 import React, {useState} from 'react';
 import {useAuth} from '@core/contexts/AuthContext';
-import {getAvatarUrl, getAvatarBg, isAvatarImage} from '@core/utils/avatar';
+import {getAvatarUrl, getAvatarBg, isAvatarImage, isSvgKitAvatar} from '@core/utils/avatar';
 import {LoginForm} from '../components/auth/LoginForm';
 import {DashboardPage} from '../components/dashboard/DashboardPage';
 import {QuestsPage} from '../components/quests/QuestsPage';
@@ -83,7 +83,7 @@ function App() {
             <div className={topBarClass}>
                 <div className="profile-menu">
                     <div className="profile-trigger" onClick={() => toggleProfileMenu()}>
-                        {isAvatarImage(user?.avatar_url) ? (
+                        {isAvatarImage(user?.avatar_url) || isSvgKitAvatar(user?.avatar_url) ? (
                             <img
                                 src={getAvatarUrl(user?.avatar_url)}
                                 alt={user?.name || 'Avatar'}
@@ -92,7 +92,7 @@ function App() {
                                     width: '40px',
                                     height: '40px',
                                     borderRadius: '50%',
-                                    objectFit: 'cover',
+                                    objectFit: isSvgKitAvatar(user?.avatar_url) ? 'contain' : 'cover',
                                 }}
                             />
                         ) : (

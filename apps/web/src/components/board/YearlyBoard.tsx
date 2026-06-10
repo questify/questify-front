@@ -74,21 +74,24 @@ export function YearlyBoard() {
         }
 
         // Count active daily quests as reference for "total"
-        const dailyQuestCount = data?.quests?.filter((q: any) => q.is_active && q.frequency === 'daily').length || 0;
+        const dailyQuestCount = data?.quests?.filter((q: any) => q.is_active && q.frequency === 'Journalier').length || 0;
         // Don't force totalRef to 1 when there are no daily quests — keep it at 0
         const totalRef = dailyQuestCount;
 
         // Start from user's start_date if set, otherwise 365 days ago
-        const startDate = (() => {
-            if (userStartDate) {
-                const d = new Date(userStartDate + 'T00:00:00');
-                d.setHours(0, 0, 0, 0);
-                return d;
-            }
-            const d = new Date(today);
-            d.setDate(d.getDate() - 364);
+        const challengeStartDate = userStartDate ? (() => {
+            const d = new Date(userStartDate);
+            d.setHours(0, 0, 0, 0);
             return d;
-        })();
+        })() : null;
+
+        const startDate = challengeStartDate
+            ? new Date(challengeStartDate)
+            : (() => {
+                const d = new Date(today);
+                d.setDate(d.getDate() - 364);
+                return d;
+            })();
         // Rewind to the Monday of that week
         const dayOfWeek = startDate.getDay(); // 0=Sun, 1=Mon...
         const daysBack = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -109,7 +112,9 @@ export function YearlyBoard() {
                 const isFuture = currentDate > today;
 
                 let status: DayStatus = 'none';
-                if (!isFuture) {
+                if (challengeStartDate && currentDate < challengeStartDate) {
+                    status = 'none';
+                } else if (!isFuture) {
                     const count = validationsByDate[dateStr] || 0;
                     if (totalRef === 0) {
                         // No daily quests configured: completed if any validation, missed otherwise
@@ -264,7 +269,7 @@ export function YearlyBoard() {
                                         userSelect: 'none',
                                     }}
                                     onMouseEnter={(e) => {
-                                        if (day.status === 'future') return;
+                                        if (day.status === 'future' || day.status === 'none') return;
                                         const rect = (e.target as HTMLElement).getBoundingClientRect();
                                         setTooltip({ x: rect.left, y: rect.top, day });
                                     }}
